@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.moview.model.dto.ImageRequestDTO;
-import com.moview.model.dto.ImageResponseDTO;
+import com.moview.model.dto.request.ImageRequestDTO;
+import com.moview.model.dto.response.ImageResponseDTO;
 import com.moview.model.entity.Member;
 import com.moview.model.entity.Review;
 import com.moview.model.entity.ReviewImage;

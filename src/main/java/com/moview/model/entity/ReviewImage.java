@@ -33,9 +33,9 @@ public class ReviewImage {
 	@Column(length = 1000)
 	private String fileUrl;
 
-	private ReviewImage(Review review, String type, String fileUrl) {
+	private ReviewImage(Review review, String fileName, String fileUrl) {
 		this.review = review;
-		this.fileName = type;
+		this.fileName = fileName;
 		this.fileUrl = fileUrl;
 	}
 

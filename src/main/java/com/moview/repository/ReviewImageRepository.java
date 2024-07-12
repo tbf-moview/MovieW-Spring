@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
-public class ImageRepository {
+public class ReviewImageRepository {
 
 	private final EntityManager em;
 
@@ -20,17 +20,7 @@ public class ImageRepository {
 	}
 
 	public void saveAll(List<ReviewImage> reviewImages) {
-
-		try {
-			em.getTransaction().begin();
-			for (ReviewImage reviewImage : reviewImages) {
-				em.persist(reviewImage);
-			}
-			em.getTransaction().commit();
-		} catch (Exception e) {
-			em.getTransaction().rollback();
-			throw e;
-		}
+		reviewImages.forEach(this::save);
 	}
 
 }

@@ -14,10 +14,9 @@ import com.moview.model.dto.response.ImageResponseDTO;
 import com.moview.model.entity.Member;
 import com.moview.model.entity.Review;
 import com.moview.model.entity.ReviewImage;
-import com.moview.service.ImageService;
 import com.moview.service.MemberService;
+import com.moview.service.ReviewImageService;
 import com.moview.service.ReviewService;
-import com.moview.service.S3Service;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +26,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api")
 public class ReviewController {
 
-	private final ImageService imageService;
-	private final S3Service s3Service;
+	private final ReviewImageService reviewImageService;
 	private final ReviewService reviewService;
 	private final MemberService memberService;
 
@@ -42,8 +40,7 @@ public class ReviewController {
 		Review review = Review.of(member, imageRequestDTO.getReviewTitle(), null);
 		Review createdReview = reviewService.save(review);
 
-		List<ReviewImage> reviewImages = s3Service.upload(imageRequestDTO.getImageFiles(), createdReview);
-		imageService.saveAll(reviewImages);
+		List<ReviewImage> reviewImages = reviewImageService.saveAll(imageRequestDTO.getImageFiles(), createdReview);
 
 		return ResponseEntity.status(HttpStatus.OK)
 			.body(new ImageResponseDTO(
@@ -52,7 +49,6 @@ public class ReviewController {
 					.map(ReviewImage::getFileUrl)
 					.toList()
 			));
-
 	}
 
 }

@@ -29,4 +29,8 @@ public class ReviewRepository {
 			.stream()
 			.findAny();
 	}
+
+	public void delete(Review review) {
+		em.remove(review);
+	}
 }

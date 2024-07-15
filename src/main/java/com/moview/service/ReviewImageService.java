@@ -37,7 +37,7 @@ public class ReviewImageService {
 			}
 
 		} catch (IOException e) {
-			cleanupUploadReviewImage(images);
+			deleteUploadReviewImage(images);
 			throw new RuntimeException(e);
 		}
 
@@ -51,7 +51,7 @@ public class ReviewImageService {
 		return reviewImage;
 	}
 
-	private void cleanupUploadReviewImage(List<ReviewImage> images) {
+	private void deleteUploadReviewImage(List<ReviewImage> images) {
 		for (ReviewImage image : images) {
 			s3Service.deleteS3File(image.getFileName());
 		}

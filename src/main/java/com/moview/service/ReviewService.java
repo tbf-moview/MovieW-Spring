@@ -46,4 +46,8 @@ public class ReviewService {
 			.orElseThrow(() -> new IllegalArgumentException("[ERROR]존재하지 않는 리뷰"));
 	}
 
+	public void delete(Review review) {
+		reviewRepository.delete(review);
+	}
+
 }

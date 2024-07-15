@@ -1,5 +1,7 @@
 package com.moview.repository;
 
+import java.util.Optional;
+
 import org.springframework.stereotype.Repository;
 
 import com.moview.model.entity.Review;
@@ -18,8 +20,13 @@ public class ReviewRepository {
 		return review;
 	}
 
-	public Review findById(Long id) {
-		return em.find(Review.class, id);
+	public Optional<Review> findByIdWithImagesAndTags(Long id) {
+		return em.createQuery(
+				"select r from Review r left join fetch r.reviewImages left join fetch r.reviewTags where r.id = :id",
+				Review.class
+			).setParameter("id", id)
+			.getResultList()
+			.stream()
+			.findAny();
 	}
-
 }

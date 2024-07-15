@@ -3,7 +3,6 @@ package com.moview.service;
 import java.io.File;
 import java.io.IOException;
 import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -30,13 +29,14 @@ public class S3Service {
 		this.bucket = bucket;
 	}
 
-	public Image upload(MultipartFile file, String prefixName) throws IOException {
+	public Image upload(MultipartFile file, String dirName, String prefixName) throws IOException {
 
 		File uploadFile = FileConverter.convertFile(file, prefixName);
-		String uploadedFilename = uploadFile.getName();
+		String uploadFilename = dirName + uploadFile.getName();
+		log.info("Uploaded file name : {}", uploadFilename);
 
 		try {
-			uploadToS3(uploadFile);
+			uploadToS3(uploadFile, uploadFilename);
 
 		} catch (Exception e) {
 			log.error("파일 업로드 중 예외 발생 : {}", e.getMessage(), e);
@@ -46,10 +46,9 @@ public class S3Service {
 			deleteFile(uploadFile);
 		}
 
-		String url = URLEncoder.encode(amazonS3.getUrl(bucket, uploadedFilename).toString(),
-			StandardCharsets.UTF_8);
+		String url = amazonS3.getUrl(bucket, uploadFilename).toString();
 
-		return new Image(uploadedFilename, url);
+		return new Image(uploadFilename, url);
 	}
 
 	private void deleteFile(File file) {
@@ -61,14 +60,15 @@ public class S3Service {
 		}
 	}
 
-	private void uploadToS3(File file) {
+	private void uploadToS3(File file, String fileName) {
 
-		amazonS3.putObject(new PutObjectRequest(bucket, file.getName(), file)
+		amazonS3.putObject(new PutObjectRequest(bucket, fileName, file)
 			.withCannedAcl(CannedAccessControlList.PublicRead));
 	}
 
 	public void deleteS3File(String fileName) {
 
+		// Todo: 디코딩 필요한지 확인
 		String decodedFileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8);
 		amazonS3.deleteObject(bucket, decodedFileName);
 		log.info("delete file {}", decodedFileName);

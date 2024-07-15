@@ -20,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class ReviewImageService {
 
+	private static final String DIR_NAME = "review-images/";
+
 	private final ReviewImageRepository reviewImageRepository;
 	private final S3Service s3Service;
 
@@ -46,7 +48,7 @@ public class ReviewImageService {
 	}
 
 	private ReviewImage uploadAndSaveReviewImage(Review review, MultipartFile originalFile) throws IOException {
-		Image uploadImage = s3Service.upload(originalFile, String.valueOf(review.getId()));
+		Image uploadImage = s3Service.upload(originalFile, DIR_NAME, String.valueOf(review.getId()));
 		ReviewImage reviewImage = ReviewImage.of(review, uploadImage.fileName(), uploadImage.fileUrl());
 		reviewImageRepository.save(reviewImage);
 		return reviewImage;

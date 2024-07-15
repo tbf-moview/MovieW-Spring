@@ -2,8 +2,10 @@ package com.moview.model.entity;
 
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
@@ -17,6 +19,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 
 @Entity
@@ -47,10 +50,12 @@ public class Review {
 	private Timestamp updateDate;
 
 	@OneToMany(mappedBy = "review")
-	private List<ReviewImage> reviewImages = new ArrayList<>();
+	@JsonManagedReference
+	private Set<ReviewImage> reviewImages = new HashSet<>();
 
 	@OneToMany(mappedBy = "review")
-	private List<ReviewTag> reviewTags = new ArrayList<>();
+	@JsonManagedReference
+	private Set<ReviewTag> reviewTags = new HashSet<>();
 
 	private Review(Member member, String title, @Nullable String content, Timestamp createDate,
 		@Nullable Timestamp updateDate) {
@@ -69,6 +74,12 @@ public class Review {
 	public static Review of(Member member, String title, @Nullable String content) {
 		Timestamp now = Timestamp.from(Instant.now());
 		return new Review(member, title, content, now, now);
-
 	}
+
+	public void update(String title, String content) {
+		this.title = title;
+		this.content = content;
+		this.updateDate = Timestamp.from(Instant.now());
+	}
+
 }

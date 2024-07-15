@@ -23,4 +23,8 @@ public class ReviewImageRepository {
 		reviewImages.forEach(this::save);
 	}
 
+	public void delete(ReviewImage reviewImage) {
+		em.remove(reviewImage);
+	}
+
 }

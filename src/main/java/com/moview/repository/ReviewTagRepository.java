@@ -18,4 +18,8 @@ public class ReviewTagRepository {
 		return reviewTag;
 	}
 
+	public void delete(ReviewTag reviewTag) {
+		em.remove(reviewTag);
+	}
+
 }

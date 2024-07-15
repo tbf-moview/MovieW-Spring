@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -47,11 +48,13 @@ public class ReviewController {
 		// Todo: 리뷰 작성 중 오류 일어날 시, 생성된 리뷰 제거하는 로직
 		Review createdReview = reviewService.save(member, reviewRequestDTO.getTitle());
 		List<ReviewImage> reviewImages = reviewImageService.saveAll(reviewRequestDTO.getImages(), createdReview);
-		reviewService.update(createdReview, reviewRequestDTO.getTitle(), reviewRequestDTO.getTexts(),
+		createdReview = reviewService.update(createdReview, reviewRequestDTO.getTitle(), reviewRequestDTO.getTexts(),
 			reviewImages);
 		reviewTagService.saveAll(createdReview, reviewRequestDTO.getTags());
 
-		return ResponseEntity.status(HttpStatus.OK).body("작성 완료");
+		log.info("createdReview : {}", createdReview.toString());
+
+		return ResponseEntity.status(HttpStatus.CREATED).body("작성 완료");
 	}
 
 	@GetMapping("/review/{id}")
@@ -60,4 +63,20 @@ public class ReviewController {
 		log.info("review : {}", review);
 		return ResponseEntity.status(HttpStatus.OK).body(review);
 	}
+
+	@PutMapping("/review/{id}")
+	public ResponseEntity<?> updateReview(@PathVariable(name = "id") Long id,
+		@ModelAttribute ReviewRequestDTO reviewRequestDTO) {
+
+		Review findReview = reviewService.findByIdWithImagesAndTags(id);
+		reviewImageService.deleteAll(findReview.getReviewImages());
+		reviewTagService.deleteAll(findReview.getReviewTags());
+
+		List<ReviewImage> reviewImages = reviewImageService.saveAll(reviewRequestDTO.getImages(), findReview);
+		reviewService.update(findReview, reviewRequestDTO.getTitle(), reviewRequestDTO.getTexts(), reviewImages);
+		reviewTagService.saveAll(findReview, reviewRequestDTO.getTags());
+
+		return ResponseEntity.status(HttpStatus.OK).body("수정 완료");
+	}
+
 }

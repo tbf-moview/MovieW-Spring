@@ -1,6 +1,7 @@
 package com.moview.service;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
 
@@ -24,7 +25,10 @@ public class ReviewTagService {
 			.map(tag -> ReviewTag.of(review, tag))
 			.map(reviewTagRepository::save)
 			.toList();
+	}
 
+	public void deleteAll(Set<ReviewTag> tags) {
+		tags.forEach(reviewTagRepository::delete);
 	}
 
 }

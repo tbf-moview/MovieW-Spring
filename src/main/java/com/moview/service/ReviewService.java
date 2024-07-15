@@ -27,7 +27,7 @@ public class ReviewService {
 	public Review update(Review review, String title, List<String> texts, List<ReviewImage> reviewImages) {
 		String content = makeContent(texts, reviewImages);
 		review.update(title, content);
-		return reviewRepository.save(review);
+		return review;
 	}
 
 	public String makeContent(List<String> texts, List<ReviewImage> reviewImages) {

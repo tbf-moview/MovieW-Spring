@@ -3,6 +3,7 @@ package com.moview.service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,7 +32,7 @@ public class ReviewImageService {
 
 		try {
 			for (MultipartFile originalFile : originalFiles) {
-				ReviewImage reviewImage = uploadAndSaveReviewImage(review, originalFile);
+				ReviewImage reviewImage = uploadS3AndSaveDBReviewImage(review, originalFile);
 				images.add(reviewImage);
 			}
 
@@ -43,7 +44,7 @@ public class ReviewImageService {
 		return images;
 	}
 
-	private ReviewImage uploadAndSaveReviewImage(Review review, MultipartFile originalFile) throws IOException {
+	private ReviewImage uploadS3AndSaveDBReviewImage(Review review, MultipartFile originalFile) throws IOException {
 		Image uploadImage = s3Service.upload(originalFile, DIR_NAME, String.valueOf(review.getId()));
 		ReviewImage reviewImage = ReviewImage.of(review, uploadImage.fileName(), uploadImage.fileUrl());
 		reviewImageRepository.save(reviewImage);
@@ -55,4 +56,14 @@ public class ReviewImageService {
 			s3Service.deleteS3File(image.getFileName());
 		}
 	}
+
+	public void deleteAll(Set<ReviewImage> images) {
+		images.forEach(this::deleteS3AndDBReviewImages);
+	}
+
+	private void deleteS3AndDBReviewImages(ReviewImage reviewImage) {
+		reviewImageRepository.delete(reviewImage);
+		s3Service.deleteS3File(reviewImage.getFileName());
+	}
+
 }

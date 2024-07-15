@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.moview.model.dto.request.ReviewRequestDTO;
+import com.moview.model.dto.response.ReviewResponseDTO;
 import com.moview.model.entity.Member;
 import com.moview.model.entity.Review;
 import com.moview.model.entity.ReviewImage;
@@ -37,7 +39,7 @@ public class ReviewController {
 	private final ReviewTagService reviewTagService;
 
 	@PostMapping("/review")
-	public ResponseEntity<String> createReview(@ModelAttribute ReviewRequestDTO reviewRequestDTO,
+	public ResponseEntity<String> createReview(@Validated @ModelAttribute ReviewRequestDTO reviewRequestDTO,
 		HttpSession httpSession) {
 
 		log.info("reviewRequestDTO : {}", reviewRequestDTO);
@@ -58,15 +60,23 @@ public class ReviewController {
 	}
 
 	@GetMapping("/review/{id}")
-	public ResponseEntity<?> findReview(@PathVariable(name = "id") Long id) {
+	public ResponseEntity<ReviewResponseDTO> findReview(@PathVariable(name = "id") Long id) {
 		Review review = reviewService.findByIdWithImagesAndTags(id);
 		log.info("review : {}", review);
-		return ResponseEntity.status(HttpStatus.OK).body(review);
+		return ResponseEntity.status(HttpStatus.OK).body(new ReviewResponseDTO(
+			review.getId(),
+			review.getTitle(),
+			review.getContent(),
+			review.getMember(),
+			review.getReviewTags(),
+			review.getCreateDate(),
+			review.getUpdateDate()
+		));
 	}
 
 	@PutMapping("/review/{id}")
 	public ResponseEntity<?> updateReview(@PathVariable(name = "id") Long id,
-		@ModelAttribute ReviewRequestDTO reviewRequestDTO) {
+		@Validated @ModelAttribute ReviewRequestDTO reviewRequestDTO) {
 
 		Review findReview = reviewService.findByIdWithImagesAndTags(id);
 		reviewImageService.deleteAll(findReview.getReviewImages());

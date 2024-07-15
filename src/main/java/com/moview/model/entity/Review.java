@@ -19,7 +19,6 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.ToString;
 
 @Entity
@@ -64,11 +63,6 @@ public class Review {
 		this.content = content;
 		this.createDate = createDate;
 		this.updateDate = updateDate;
-	}
-
-	public static Review of(Member member, String title, @Nullable String content, Timestamp createDate,
-		@Nullable Timestamp updateDate) {
-		return new Review(member, title, content, createDate, updateDate);
 	}
 
 	public static Review of(Member member, String title, @Nullable String content) {

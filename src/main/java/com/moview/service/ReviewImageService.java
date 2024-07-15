@@ -25,10 +25,6 @@ public class ReviewImageService {
 	private final ReviewImageRepository reviewImageRepository;
 	private final S3Service s3Service;
 
-	public void save(ReviewImage reviewImage) {
-		reviewImageRepository.save(reviewImage);
-	}
-
 	public List<ReviewImage> saveAll(List<MultipartFile> originalFiles, Review review) {
 
 		List<ReviewImage> images = new ArrayList<>();

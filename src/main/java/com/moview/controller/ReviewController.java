@@ -15,7 +15,6 @@ import com.moview.model.dto.request.ReviewRequestDTO;
 import com.moview.model.entity.Member;
 import com.moview.model.entity.Review;
 import com.moview.model.entity.ReviewImage;
-import com.moview.repository.ReviewTagRepository;
 import com.moview.service.MemberService;
 import com.moview.service.ReviewImageService;
 import com.moview.service.ReviewService;
@@ -33,7 +32,6 @@ public class ReviewController {
 
 	private final ReviewImageService reviewImageService;
 	private final ReviewService reviewService;
-	private final ReviewTagRepository reviewTagRepository;
 	private final MemberService memberService;
 	private final ReviewTagService reviewTagService;
 
@@ -56,4 +54,10 @@ public class ReviewController {
 		return ResponseEntity.status(HttpStatus.OK).body("작성 완료");
 	}
 
+	@GetMapping("/review/{id}")
+	public ResponseEntity<?> findReview(@PathVariable(name = "id") Long id) {
+		Review review = reviewService.findByIdWithImagesAndTags(id);
+		log.info("review : {}", review);
+		return ResponseEntity.status(HttpStatus.OK).body(review);
+	}
 }

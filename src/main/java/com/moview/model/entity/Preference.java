@@ -1,6 +1,7 @@
 package com.moview.model.entity;
 
 import java.sql.Timestamp;
+import java.time.Instant;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,7 +28,7 @@ public class Preference {
 	@JoinColumn(name = "review_id", nullable = false)
 	private Review review;
 
-	@Id
+	@Column(nullable = false)
 	private Timestamp likeDate;
 
 	@Column(columnDefinition = "TINYINT(1)")
@@ -40,7 +41,13 @@ public class Preference {
 		this.isLike = isLike;
 	}
 
-	public static Preference of(Member member, Review review, Timestamp likeDate) {
-		return new Preference(member, review, likeDate, false);
+	public static Preference of(Member member, Review review) {
+		return new Preference(member, review, Timestamp.from(Instant.now()), true);
 	}
+
+	public void updateLike() {
+		this.isLike = !isLike;
+		this.likeDate = Timestamp.from(Instant.now());
+	}
+
 }

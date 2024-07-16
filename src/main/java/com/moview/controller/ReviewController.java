@@ -17,9 +17,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.moview.model.dto.request.ReviewRequestDTO;
 import com.moview.model.dto.response.ReviewResponseDTO;
 import com.moview.model.entity.Member;
+import com.moview.model.entity.Preference;
 import com.moview.model.entity.Review;
 import com.moview.model.entity.ReviewImage;
 import com.moview.service.MemberService;
+import com.moview.service.PreferenceService;
 import com.moview.service.ReviewImageService;
 import com.moview.service.ReviewService;
 import com.moview.service.ReviewTagService;
@@ -38,6 +40,7 @@ public class ReviewController {
 	private final ReviewService reviewService;
 	private final MemberService memberService;
 	private final ReviewTagService reviewTagService;
+	private final PreferenceService preferenceService;
 
 	@PostMapping("/review")
 	public ResponseEntity<String> createReview(@Validated @ModelAttribute ReviewRequestDTO reviewRequestDTO,
@@ -62,8 +65,13 @@ public class ReviewController {
 
 	@GetMapping("/review/{id}")
 	public ResponseEntity<ReviewResponseDTO> findReview(@PathVariable(name = "id") Long id) {
+
 		Review review = reviewService.findByIdWithImagesAndTags(id);
 		log.info("review : {}", review);
+
+		long likeCount = preferenceService.countPreference(review);
+		log.info("likeCount : {}", likeCount);
+
 		return ResponseEntity.status(HttpStatus.OK).body(new ReviewResponseDTO(
 			review.getId(),
 			review.getTitle(),
@@ -71,12 +79,13 @@ public class ReviewController {
 			review.getMember(),
 			review.getReviewTags(),
 			review.getCreateDate(),
-			review.getUpdateDate()
+			review.getUpdateDate(),
+			likeCount
 		));
 	}
 
 	@PutMapping("/review/{id}")
-	public ResponseEntity<?> updateReview(@PathVariable(name = "id") Long id,
+	public ResponseEntity<String> updateReview(@PathVariable(name = "id") Long id,
 		@Validated @ModelAttribute ReviewRequestDTO reviewRequestDTO) {
 
 		Review findReview = reviewService.findByIdWithImagesAndTags(id);
@@ -91,7 +100,7 @@ public class ReviewController {
 	}
 
 	@DeleteMapping("/review/{id}")
-	public ResponseEntity<?> deleteReview(@PathVariable(name = "id") Long id) {
+	public ResponseEntity<String> deleteReview(@PathVariable(name = "id") Long id) {
 
 		Review findReview = reviewService.findByIdWithImagesAndTags(id);
 		reviewImageService.deleteAll(findReview.getReviewImages());
@@ -101,4 +110,16 @@ public class ReviewController {
 		return ResponseEntity.status(HttpStatus.OK).body("삭제 완료");
 	}
 
+	@PutMapping("/review/{id}/like")
+	public ResponseEntity<String> likeReview(@PathVariable(name = "id") Long id, HttpSession httpSession) {
+
+		String email = (String)httpSession.getAttribute("email");
+		Member member = memberService.findByEmail(email);
+		Review review = reviewService.findByIdWithImagesAndTags(id);
+
+		Preference preference = preferenceService.changePreference(member, review);
+		log.info("preference : {}", preference);
+
+		return ResponseEntity.status(HttpStatus.OK).body("좋아요 변경 완료");
+	}
 }

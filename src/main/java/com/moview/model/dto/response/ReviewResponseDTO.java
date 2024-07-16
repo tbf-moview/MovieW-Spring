@@ -24,4 +24,5 @@ public class ReviewResponseDTO {
 	private Set<ReviewTag> reviewTags;
 	private Timestamp createDate;
 	private Timestamp updateDate;
+	private long likeCount;
 }

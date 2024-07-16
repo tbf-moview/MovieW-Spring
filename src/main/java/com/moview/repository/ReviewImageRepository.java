@@ -1,7 +1,5 @@
 package com.moview.repository;
 
-import java.util.List;
-
 import org.springframework.stereotype.Repository;
 
 import com.moview.model.entity.ReviewImage;
@@ -17,10 +15,6 @@ public class ReviewImageRepository {
 
 	public void save(ReviewImage reviewImage) {
 		em.persist(reviewImage);
-	}
-
-	public void saveAll(List<ReviewImage> reviewImages) {
-		reviewImages.forEach(this::save);
 	}
 
 	public void delete(ReviewImage reviewImage) {

@@ -1,6 +1,8 @@
 package com.moview.service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
@@ -19,7 +21,13 @@ public class ReviewTagService {
 
 	private final ReviewTagRepository reviewTagRepository;
 
-	public List<ReviewTag> saveAll(Review review, List<String> tags) {
+	public List<ReviewTag> saveAll(Review review, Optional<List<String>> optionalTags) {
+
+		if(optionalTags.isEmpty()) {
+			return new ArrayList<>();
+		}
+
+		List<String> tags = optionalTags.get();
 
 		return tags.stream()
 			.map(tag -> ReviewTag.of(review, tag))

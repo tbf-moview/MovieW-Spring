@@ -1,6 +1,7 @@
 package com.moview.controller;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,15 +49,16 @@ public class ReviewController {
 
 		log.info("reviewRequestDTO : {}", reviewRequestDTO);
 
-		String email = (String)httpSession.getAttribute("email");
+		String email = (String)httpSession.getAttribute("bb@test.com");
 		Member member = memberService.findByEmail(email);
 
-		// Todo: 리뷰 작성 중 오류 일어날 시, 생성된 리뷰 제거하는 로직
+		// Todo: 리뷰 작성 중 오류 일어날 시, 생성된 리뷰 제거하는 로직, images, tags null 검증
 		Review createdReview = reviewService.save(member, reviewRequestDTO.getTitle());
-		List<ReviewImage> reviewImages = reviewImageService.saveAll(reviewRequestDTO.getImages(), createdReview);
+		List<ReviewImage> reviewImages = reviewImageService.saveAll(Optional.ofNullable(reviewRequestDTO.getImages()),
+			createdReview);
 		createdReview = reviewService.update(createdReview, reviewRequestDTO.getTitle(), reviewRequestDTO.getTexts(),
 			reviewImages);
-		reviewTagService.saveAll(createdReview, reviewRequestDTO.getTags());
+		reviewTagService.saveAll(createdReview, Optional.ofNullable(reviewRequestDTO.getTags()));
 
 		log.info("createdReview : {}", createdReview.toString());
 
@@ -92,9 +94,10 @@ public class ReviewController {
 		reviewImageService.deleteAll(findReview.getReviewImages());
 		reviewTagService.deleteAll(findReview.getReviewTags());
 
-		List<ReviewImage> reviewImages = reviewImageService.saveAll(reviewRequestDTO.getImages(), findReview);
+		List<ReviewImage> reviewImages = reviewImageService.saveAll(Optional.ofNullable(reviewRequestDTO.getImages()),
+			findReview);
 		reviewService.update(findReview, reviewRequestDTO.getTitle(), reviewRequestDTO.getTexts(), reviewImages);
-		reviewTagService.saveAll(findReview, reviewRequestDTO.getTags());
+		reviewTagService.saveAll(findReview, Optional.ofNullable(reviewRequestDTO.getTags()));
 
 		return ResponseEntity.status(HttpStatus.OK).body("수정 완료");
 	}

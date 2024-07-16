@@ -3,6 +3,7 @@ package com.moview.service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
@@ -26,8 +27,13 @@ public class ReviewImageService {
 	private final ReviewImageRepository reviewImageRepository;
 	private final S3Service s3Service;
 
-	public List<ReviewImage> saveAll(List<MultipartFile> originalFiles, Review review) {
+	public List<ReviewImage> saveAll(Optional<List<MultipartFile>> optionalMultipartFiles, Review review) {
 
+		if (optionalMultipartFiles.isEmpty()) {
+			return new ArrayList<>();
+		}
+
+		List<MultipartFile> originalFiles = optionalMultipartFiles.get();
 		List<ReviewImage> images = new ArrayList<>();
 
 		try {

@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.moview.model.dto.response.ReviewListResponseDTO;
 import com.moview.model.entity.Member;
 import com.moview.model.entity.Review;
 import com.moview.model.entity.ReviewImage;
@@ -48,6 +49,10 @@ public class ReviewService {
 
 	public void delete(Review review) {
 		reviewRepository.delete(review);
+	}
+
+	public List<ReviewListResponseDTO> findAllWithLikeCount(int page) {
+		return reviewRepository.findAllWithLikeCount(page);
 	}
 
 }

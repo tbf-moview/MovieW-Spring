@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.moview.model.dto.request.ReviewRequestDTO;
+import com.moview.model.dto.response.ReviewListResponseDTO;
 import com.moview.model.dto.response.ReviewResponseDTO;
 import com.moview.model.entity.Member;
 import com.moview.model.entity.Preference;
@@ -52,7 +53,7 @@ public class ReviewController {
 		String email = (String)httpSession.getAttribute("bb@test.com");
 		Member member = memberService.findByEmail(email);
 
-		// Todo: 리뷰 작성 중 오류 일어날 시, 생성된 리뷰 제거하는 로직, images, tags null 검증
+		// Todo: 리뷰 작성 중 오류 일어날 시, 생성된 리뷰 제거하는 로직
 		Review createdReview = reviewService.save(member, reviewRequestDTO.getTitle());
 		List<ReviewImage> reviewImages = reviewImageService.saveAll(Optional.ofNullable(reviewRequestDTO.getImages()),
 			createdReview);
@@ -124,5 +125,12 @@ public class ReviewController {
 		log.info("preference : {}", preference);
 
 		return ResponseEntity.status(HttpStatus.OK).body("좋아요 변경 완료");
+	}
+
+	@GetMapping("/reviews/{page}")
+	public ResponseEntity<?> findAllReviews(@PathVariable(name = "page") int page) {
+		List<ReviewListResponseDTO> allWithLikeCount = reviewService.findAllWithLikeCount(page);
+
+		return ResponseEntity.status(HttpStatus.OK).body(allWithLikeCount);
 	}
 }

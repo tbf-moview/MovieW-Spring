@@ -27,7 +27,7 @@ public class ReviewImageService {
 	private final ReviewImageRepository reviewImageRepository;
 	private final S3Service s3Service;
 
-	public List<ReviewImage> saveAll(Optional<List<MultipartFile>> optionalMultipartFiles, Review review) {
+	public List<ReviewImage> saveAllAtS3AndDB(Optional<List<MultipartFile>> optionalMultipartFiles, Review review) {
 
 		if (optionalMultipartFiles.isEmpty()) {
 			return new ArrayList<>();
@@ -43,7 +43,7 @@ public class ReviewImageService {
 			}
 
 		} catch (IOException e) {
-			deleteUploadReviewImage(images);
+			deleteAllUploadReviewImage(images);
 			throw new RuntimeException(e);
 		}
 
@@ -57,19 +57,21 @@ public class ReviewImageService {
 		return reviewImage;
 	}
 
-	private void deleteUploadReviewImage(List<ReviewImage> images) {
-		for (ReviewImage image : images) {
-			s3Service.deleteS3File(image.getFileName());
-		}
-	}
+	public void deleteAllAtS3AndDB(Set<ReviewImage> images) {
 
-	public void deleteAll(Set<ReviewImage> images) {
+		// Todo: S3 삭제 트랜잭션 처리
 		images.forEach(this::deleteS3AndDBReviewImages);
 	}
 
 	private void deleteS3AndDBReviewImages(ReviewImage reviewImage) {
 		reviewImageRepository.delete(reviewImage);
 		s3Service.deleteS3File(reviewImage.getFileName());
+	}
+
+	private void deleteAllUploadReviewImage(List<ReviewImage> images) {
+		for (ReviewImage image : images) {
+			s3Service.deleteS3File(image.getFileName());
+		}
 	}
 
 }

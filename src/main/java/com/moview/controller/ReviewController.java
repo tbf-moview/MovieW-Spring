@@ -29,6 +29,7 @@ import com.moview.service.ReviewService;
 import com.moview.service.ReviewTagService;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,17 +46,20 @@ public class ReviewController {
 	private final PreferenceService preferenceService;
 
 	@PostMapping("/review")
+	@Transactional
 	public ResponseEntity<String> createReview(@Validated @ModelAttribute ReviewRequestDTO reviewRequestDTO,
 		HttpSession httpSession) {
 
 		log.info("reviewRequestDTO : {}", reviewRequestDTO);
 
-		String email = (String)httpSession.getAttribute("bb@test.com");
+		String email = (String)httpSession.getAttribute("email");
 		Member member = memberService.findByEmail(email);
 
-		// Todo: 리뷰 작성 중 오류 일어날 시, 생성된 리뷰 제거하는 로직
+		// Todo: 업로드 처리 이후 오류 발생시, S3이미지 삭제처리 개선
 		Review createdReview = reviewService.save(member, reviewRequestDTO.getTitle());
-		List<ReviewImage> reviewImages = reviewImageService.saveAll(Optional.ofNullable(reviewRequestDTO.getImages()),
+		log.info("createdReview : {}", createdReview.toString());
+
+		List<ReviewImage> reviewImages = reviewImageService.saveAllAtS3AndDB(Optional.ofNullable(reviewRequestDTO.getImages()),
 			createdReview);
 		createdReview = reviewService.update(createdReview, reviewRequestDTO.getTitle(), reviewRequestDTO.getTexts(),
 			reviewImages);
@@ -88,14 +92,15 @@ public class ReviewController {
 	}
 
 	@PutMapping("/review/{id}")
+	@Transactional
 	public ResponseEntity<String> updateReview(@PathVariable(name = "id") Long id,
 		@Validated @ModelAttribute ReviewRequestDTO reviewRequestDTO) {
 
 		Review findReview = reviewService.findByIdWithImagesAndTags(id);
-		reviewImageService.deleteAll(findReview.getReviewImages());
+		reviewImageService.deleteAllAtS3AndDB(findReview.getReviewImages());
 		reviewTagService.deleteAll(findReview.getReviewTags());
 
-		List<ReviewImage> reviewImages = reviewImageService.saveAll(Optional.ofNullable(reviewRequestDTO.getImages()),
+		List<ReviewImage> reviewImages = reviewImageService.saveAllAtS3AndDB(Optional.ofNullable(reviewRequestDTO.getImages()),
 			findReview);
 		reviewService.update(findReview, reviewRequestDTO.getTitle(), reviewRequestDTO.getTexts(), reviewImages);
 		reviewTagService.saveAll(findReview, Optional.ofNullable(reviewRequestDTO.getTags()));
@@ -104,11 +109,12 @@ public class ReviewController {
 	}
 
 	@DeleteMapping("/review/{id}")
+	@Transactional
 	public ResponseEntity<String> deleteReview(@PathVariable(name = "id") Long id) {
 
 		Review findReview = reviewService.findByIdWithImagesAndTags(id);
-		reviewImageService.deleteAll(findReview.getReviewImages());
 		reviewTagService.deleteAll(findReview.getReviewTags());
+		reviewImageService.deleteAllAtS3AndDB(findReview.getReviewImages());
 		reviewService.delete(findReview);
 
 		return ResponseEntity.status(HttpStatus.OK).body("삭제 완료");

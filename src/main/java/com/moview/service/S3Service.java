@@ -13,7 +13,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.moview.model.vo.Image;
-import com.moview.util.FileConverter;
+import com.moview.util.FileManager;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,7 +31,7 @@ public class S3Service {
 
 	public Image upload(MultipartFile file, String dirName, String prefixName) throws IOException {
 
-		File uploadFile = FileConverter.convertFile(file, prefixName);
+		File uploadFile = FileManager.convertFile(file, prefixName);
 		String uploadFilename = dirName + uploadFile.getName();
 		log.info("Uploaded file name : {}", uploadFilename);
 
@@ -43,21 +43,12 @@ public class S3Service {
 			throw e;
 
 		} finally {
-			deleteFile(uploadFile);
+			FileManager.deleteFile(uploadFile);
 		}
 
 		String url = amazonS3.getUrl(bucket, uploadFilename).toString();
 
 		return new Image(uploadFilename, url);
-	}
-
-	private void deleteFile(File file) {
-
-		if (file.delete()) {
-			log.info("{} 삭제완료", file.getName());
-		} else {
-			log.info("{} 삭제실패", file.getName());
-		}
 	}
 
 	private void uploadToS3(File file, String fileName) {

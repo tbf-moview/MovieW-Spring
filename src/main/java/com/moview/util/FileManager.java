@@ -11,7 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class FileConverter {
+public class FileManager {
 
 	private static final String FILE_NAME_DELIMITER = "_";
 
@@ -39,6 +39,15 @@ public class FileConverter {
 		log.info("uploadFilename  before return : {}", uploadFilename);
 
 		return uploadFile;
+	}
+
+	public static void deleteFile(File file) {
+
+		if (file.delete()) {
+			log.info("{} 삭제완료", file.getName());
+		} else {
+			log.info("{} 삭제실패", file.getName());
+		}
 	}
 
 }

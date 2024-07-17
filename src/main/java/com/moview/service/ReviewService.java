@@ -18,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class ReviewService {
 
+	private static final int PAGE_SIZE = 20;
+
 	private final ReviewRepository reviewRepository;
 
 	public Review save(Member member, String title) {
@@ -51,8 +53,8 @@ public class ReviewService {
 		reviewRepository.delete(review);
 	}
 
-	public List<ReviewListResponseDTO> findAllWithLikeCount(int page) {
-		return reviewRepository.findAllWithLikeCount(page);
+	public List<ReviewListResponseDTO> findAllWithLikeCount(int pageNumber) {
+		return reviewRepository.findAllWithLikeCount(pageNumber, PAGE_SIZE);
 	}
 
 }

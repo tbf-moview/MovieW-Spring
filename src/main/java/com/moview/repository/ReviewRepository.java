@@ -15,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ReviewRepository {
 
+	private static final int PAGE_CORRECT_FACTOR = -1;
+
 	private final EntityManager em;
 
 	public Review save(Review review) {
@@ -36,7 +38,7 @@ public class ReviewRepository {
 		em.remove(review);
 	}
 
-	public List<ReviewListResponseDTO> findAllWithLikeCount(int page) {
+	public List<ReviewListResponseDTO> findAllWithLikeCount(int pageNumber, int pageSize) {
 
 		String query = """
 			select new com.moview.model.dto.response.ReviewListResponseDTO(
@@ -57,8 +59,8 @@ public class ReviewRepository {
 			""";
 
 		return em.createQuery(query, ReviewListResponseDTO.class)
-			.setFirstResult((page - 1) * 20)
-			.setMaxResults(20)
+			.setFirstResult((pageNumber + PAGE_CORRECT_FACTOR) * pageSize)
+			.setMaxResults(pageSize)
 			.getResultList();
 	}
 }

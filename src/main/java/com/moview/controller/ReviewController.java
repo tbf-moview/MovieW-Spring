@@ -129,6 +129,7 @@ public class ReviewController {
 
 	@GetMapping("/reviews/{page}")
 	public ResponseEntity<?> findAllReviews(@PathVariable(name = "page") int page) {
+
 		List<ReviewListResponseDTO> allWithLikeCount = reviewService.findAllWithLikeCount(page);
 
 		return ResponseEntity.status(HttpStatus.OK).body(allWithLikeCount);

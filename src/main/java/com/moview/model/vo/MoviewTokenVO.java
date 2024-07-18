@@ -6,12 +6,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-@Getter
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString
+@Getter
 @Builder
-public class KakaoUser {
-	private String accountEmail;
-	private String profileNickname;
+@ToString
+public class MoviewTokenVO {
+	private String email;
+	private String nickname;
 }

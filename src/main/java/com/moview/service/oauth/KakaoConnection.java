@@ -12,8 +12,8 @@ import org.springframework.stereotype.Service;
 
 import com.google.gson.JsonObject;
 import com.moview.model.entity.Member;
-import com.moview.model.vo.KakaoToken;
-import com.moview.model.vo.KakaoUser;
+import com.moview.model.vo.KakaoTokenVO;
+import com.moview.model.vo.KakaoUserVO;
 import com.moview.util.HttpUtil;
 
 import lombok.RequiredArgsConstructor;
@@ -33,10 +33,10 @@ public class KakaoConnection {
 	@Value("${kakao.client-secret}")
 	private String clientSecret;
 
-	public KakaoToken getToken(Map<String, Object> codeMap) {
+	public KakaoTokenVO getToken(Map<String, Object> codeMap) {
 		String code = (String) codeMap.get("code");
 
-		KakaoToken kakaoToken = null;
+		KakaoTokenVO kakaoTokenVO = null;
 
 		try {
 			// POST 방식으로 요청 보낼 URL 설정
@@ -69,7 +69,7 @@ public class KakaoConnection {
 			JsonObject jsonObject = httpUtil.KakaoHttpUtil(conn);
 
 			// KakaoToken 생성
-			kakaoToken = KakaoToken.builder()
+			kakaoTokenVO = KakaoTokenVO.builder()
 				.accessToken(jsonObject.get("access_token").getAsString())
 				.tokenType(jsonObject.get("token_type").getAsString())
 				.refreshToken(jsonObject.get("refresh_token").getAsString())
@@ -78,18 +78,18 @@ public class KakaoConnection {
 				.refreshTokenExpiresIn(jsonObject.get("refresh_token_expires_in").getAsInt())
 				.build();
 
-			System.out.println(kakaoToken.toString());
+			System.out.println(kakaoTokenVO.toString());
 
-			return kakaoToken;
+			return kakaoTokenVO;
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return kakaoToken;
+		return kakaoTokenVO;
 	}
 
-	public KakaoUser getUserInfo(KakaoToken kakaoToken) {
-		KakaoUser kakaoUserDTO = null;
+	public KakaoUserVO getUserInfo(KakaoTokenVO kakaoTokenVO) {
+		KakaoUserVO kakaoUserVO = null;
 		try {
 			// POST 방식으로 요청 보낼 URL 설정
 			URL url = new URL("https://kapi.kakao.com/v2/user/me");
@@ -100,7 +100,7 @@ public class KakaoConnection {
 			conn.setDoOutput(true);
 
 			//요청 헤더 설정
-			conn.setRequestProperty("Authorization", "Bearer " + kakaoToken.getAccessToken());
+			conn.setRequestProperty("Authorization", "Bearer " + kakaoTokenVO.getAccessToken());
 			conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
 
 			JsonObject jsonObject = httpUtil.KakaoHttpUtil(conn);
@@ -109,22 +109,22 @@ public class KakaoConnection {
 			JsonObject profile = kakaoAccount.getAsJsonObject("profile");
 
 			// KakaoUser 생성
-			kakaoUserDTO = KakaoUser.builder()
+			kakaoUserVO = KakaoUserVO.builder()
 				.profileNickname(profile.get("nickname").getAsString())
 				.accountEmail(kakaoAccount.get("email").getAsString())
 				.build();
 
-			System.out.println(kakaoUserDTO.toString());
-			return kakaoUserDTO;
+			System.out.println(kakaoUserVO.toString());
+			return kakaoUserVO;
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return kakaoUserDTO;
+		return kakaoUserVO;
 	}
 
-	public Member convertToMember(KakaoUser kakaoUserDTO) {
+	public Member convertToMember(KakaoUserVO kakaoUserVO) {
 		// KakaoUser를 Member 객체로 변환하는 로직
-		return new Member(kakaoUserDTO.getAccountEmail(),kakaoUserDTO.getProfileNickname());
+		return new Member(kakaoUserVO.getAccountEmail(), kakaoUserVO.getProfileNickname());
 	}
 }

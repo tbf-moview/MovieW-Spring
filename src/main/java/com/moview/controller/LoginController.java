@@ -11,9 +11,9 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import com.moview.common.JwtTokenProvider;
 import com.moview.model.entity.Member;
-import com.moview.model.vo.KakaoToken;
-import com.moview.model.vo.KakaoUser;
-import com.moview.model.vo.MoviewToken;
+import com.moview.model.vo.KakaoTokenVO;
+import com.moview.model.vo.KakaoUserVO;
+import com.moview.model.vo.MoviewTokenVO;
 import com.moview.service.MemberService;
 import com.moview.service.oauth.KakaoConnection;
 import com.moview.util.CookieUtil;
@@ -32,22 +32,22 @@ public class LoginController {
 	@PostMapping("/kakao")
 	public String callback(@RequestBody Map<String, Object> codeMap, HttpServletResponse response) {
 
-		KakaoToken kakaoTokenDTO = kakaoConnection.getToken(codeMap);
-		KakaoUser kakaoUserDTO = kakaoConnection.getUserInfo(kakaoTokenDTO);
+		KakaoTokenVO kakaoTokenVO = kakaoConnection.getToken(codeMap);
+		KakaoUserVO kakaoUserVO = kakaoConnection.getUserInfo(kakaoTokenVO);
 
-		Member member = kakaoConnection.convertToMember(kakaoUserDTO);
+		Member member = kakaoConnection.convertToMember(kakaoUserVO);
 
 		//토큰 생성
-		MoviewToken moviewTokenDTO = new MoviewToken(kakaoUserDTO.getAccountEmail(),
-			kakaoUserDTO.getProfileNickname());
-		String moviewAccessToken = jwtTokenProvider.generateAccessToken(moviewTokenDTO.getEmail(),
-			moviewTokenDTO.getNickname());
-		String moviewRefreshToken = jwtTokenProvider.generateRefreshToken(moviewTokenDTO.getEmail());
+		MoviewTokenVO moviewTokenVO = new MoviewTokenVO(kakaoUserVO.getAccountEmail(),
+			kakaoUserVO.getProfileNickname());
+		String moviewAccessToken = jwtTokenProvider.generateAccessToken(moviewTokenVO.getEmail(),
+			moviewTokenVO.getNickname());
+		String moviewRefreshToken = jwtTokenProvider.generateRefreshToken(moviewTokenVO.getEmail());
 
 		// 쿠키 생성
 		CookieUtil.createCookie(response,"jwtToken",moviewAccessToken,43200);
-
-		return "http://localhost:5173/";
+		System.out.println(moviewAccessToken);
+		return "redirect:/";
 	}
 
 }

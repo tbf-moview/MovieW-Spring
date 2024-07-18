@@ -11,7 +11,7 @@ import lombok.ToString;
 @Getter
 @Builder
 @ToString
-public class KakaoToken {
+public class KakaoTokenVO {
 	private String accessToken;
 	private String tokenType;
 	private String refreshToken;

@@ -55,7 +55,7 @@ public class ReviewRepository {
 			left join Member m on r.member.email = m.email
 			left join Preference p on r.id = p.review.id
 			group by r.id, m.nickname, r.title, r.content, r.createDate, r.updateDate
-			order by coalesce(count(p), 0) desc
+			order by coalesce(count(p), 0) desc, r.createDate desc
 			""";
 
 		return em.createQuery(query, ReviewListResponseDTO.class)

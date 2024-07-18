@@ -11,7 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.moview.model.entity.Review;
 import com.moview.model.entity.ReviewImage;
-import com.moview.model.vo.Image;
+import com.moview.model.vo.ImageVO;
 import com.moview.repository.ReviewImageRepository;
 
 import jakarta.transaction.Transactional;
@@ -51,8 +51,8 @@ public class ReviewImageService {
 	}
 
 	private ReviewImage uploadS3AndSaveDBReviewImage(Review review, MultipartFile originalFile) throws IOException {
-		Image uploadImage = s3Service.upload(originalFile, DIR_NAME, String.valueOf(review.getId()));
-		ReviewImage reviewImage = ReviewImage.of(review, uploadImage.fileName(), uploadImage.fileUrl());
+		ImageVO uploadImageVO = s3Service.upload(originalFile, DIR_NAME, String.valueOf(review.getId()));
+		ReviewImage reviewImage = ReviewImage.of(review, uploadImageVO.fileName(), uploadImageVO.fileUrl());
 		reviewImageRepository.save(reviewImage);
 		return reviewImage;
 	}

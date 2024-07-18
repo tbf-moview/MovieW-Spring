@@ -12,7 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.moview.model.vo.Image;
+import com.moview.model.vo.ImageVO;
 import com.moview.util.FileManager;
 
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ public class S3Service {
 		this.bucket = bucket;
 	}
 
-	public Image upload(MultipartFile file, String dirName, String prefixName) throws IOException {
+	public ImageVO upload(MultipartFile file, String dirName, String prefixName) throws IOException {
 
 		File uploadFile = FileManager.convertFile(file, prefixName);
 		String uploadFilename = dirName + uploadFile.getName();
@@ -48,7 +48,7 @@ public class S3Service {
 
 		String url = amazonS3.getUrl(bucket, uploadFilename).toString();
 
-		return new Image(uploadFilename, url);
+		return new ImageVO(uploadFilename, url);
 	}
 
 	private void uploadToS3(File file, String fileName) {

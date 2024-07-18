@@ -9,12 +9,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Entity
 @Table(name = "preference")
 @NoArgsConstructor
+@Getter
 @ToString
 public class Preference {
 
@@ -32,13 +34,13 @@ public class Preference {
 	private Timestamp likeDate;
 
 	@Column(columnDefinition = "TINYINT(1)")
-	boolean isLike;
+	private boolean likeSign;
 
-	private Preference(Member member, Review review, Timestamp likeDate, boolean isLike) {
+	private Preference(Member member, Review review, Timestamp likeDate, boolean likeSign) {
 		this.member = member;
 		this.review = review;
 		this.likeDate = likeDate;
-		this.isLike = isLike;
+		this.likeSign = likeSign;
 	}
 
 	public static Preference of(Member member, Review review) {
@@ -46,7 +48,7 @@ public class Preference {
 	}
 
 	public void updateLike() {
-		this.isLike = !isLike;
+		this.likeSign = !likeSign;
 		this.likeDate = Timestamp.from(Instant.now());
 	}
 

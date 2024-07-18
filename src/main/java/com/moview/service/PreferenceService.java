@@ -37,4 +37,8 @@ public class PreferenceService {
 		return preferenceRepository.countByReview(review);
 	}
 
+	public Preference findByMemberAndReview(Member member, Review review) {
+		return preferenceRepository.findByMemberAndReview(member, review).orElseGet(Preference::new);
+	}
+
 }

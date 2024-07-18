@@ -71,7 +71,7 @@ public class ReviewController {
 	}
 
 	@GetMapping("/review/{id}")
-	public ResponseEntity<ReviewResponseDTO> findReview(@PathVariable(name = "id") Long id) {
+	public ResponseEntity<ReviewResponseDTO> findReview(@PathVariable(name = "id") Long id, HttpSession httpSession) {
 
 		Review review = reviewService.findByIdWithImagesAndTags(id);
 		log.info("review : {}", review);
@@ -79,15 +79,21 @@ public class ReviewController {
 		long likeCount = preferenceService.countPreference(review);
 		log.info("likeCount : {}", likeCount);
 
+		String email = (String)httpSession.getAttribute("email");
+		Member member = memberService.findByEmail("ee@test.com");
+
+		Preference preference = preferenceService.findByMemberAndReview(member, review);
+
 		return ResponseEntity.status(HttpStatus.OK).body(new ReviewResponseDTO(
 			review.getId(),
 			review.getTitle(),
 			review.getContent(),
-			review.getMember(),
+			member.getNickname(),
 			review.getReviewTags(),
 			review.getCreateDate(),
 			review.getUpdateDate(),
-			likeCount
+			likeCount,
+			preference.isLikeSign()
 		));
 	}
 
@@ -136,8 +142,8 @@ public class ReviewController {
 	@GetMapping("/reviews/{page}")
 	public ResponseEntity<?> findAllReviews(@PathVariable(name = "page") int page) {
 
-		List<ReviewListResponseDTO> allWithLikeCount = reviewService.findAllWithLikeCount(page);
+		List<ReviewListResponseDTO> reviewListResponseDTOS = reviewService.findAllWithLikeCount(page);
 
-		return ResponseEntity.status(HttpStatus.OK).body(allWithLikeCount);
+		return ResponseEntity.status(HttpStatus.OK).body(reviewListResponseDTOS);
 	}
 }

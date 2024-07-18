@@ -15,8 +15,8 @@ public class MemberRepository {
 
 	private final EntityManager em;
 
-	public Optional<Member> findByEmail(String accountEmail) {
-		return Optional.ofNullable(em.find(Member.class, accountEmail));
+	public Optional<Member> findByEmail(String email) {
+		return Optional.ofNullable(em.find(Member.class, email));
 	}
 
 }

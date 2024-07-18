@@ -53,7 +53,7 @@ public class ReviewController {
 		log.info("reviewRequestDTO : {}", reviewRequestDTO);
 
 		String email = (String)httpSession.getAttribute("email");
-		Member member = memberService.findByEmail(email);
+		Member member = memberService.findByEmail("ee@test.com");
 
 		// Todo: 업로드 처리 이후 오류 발생시, S3이미지 삭제처리 개선
 		Review createdReview = reviewService.save(member, reviewRequestDTO.getTitle());

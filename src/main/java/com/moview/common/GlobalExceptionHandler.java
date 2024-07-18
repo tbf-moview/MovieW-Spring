@@ -16,13 +16,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GlobalExceptionHandler {
 
-	@ExceptionHandler({IllegalStateException.class, IllegalArgumentException.class}) // 보통 커스텀 익셉션으로 사용
+	private static final String ERROR_MESSAGE_KEY = "message";
+
+	@ExceptionHandler({IllegalStateException.class, IllegalArgumentException.class})
 	public ResponseEntity<Map<String, String>> handleRuntimeExceptions(
 		RuntimeException runtimeException) {
 
 		logError(runtimeException);
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-			.body(Map.of("message", runtimeException.getMessage()));
+			.body(Map.of(ERROR_MESSAGE_KEY, runtimeException.getMessage()));
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)

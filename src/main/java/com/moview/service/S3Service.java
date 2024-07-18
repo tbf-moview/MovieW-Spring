@@ -39,7 +39,7 @@ public class S3Service {
 			uploadToS3(uploadFile, uploadFilename);
 
 		} catch (Exception e) {
-			log.error("파일 업로드 중 예외 발생 : {}", e.getMessage(), e);
+			log.error("파일 업로드 중 예외 발생 : {} - {}", e.getClass().getSimpleName() , e.getMessage(), e);
 			throw e;
 
 		} finally {

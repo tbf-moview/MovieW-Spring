@@ -3,9 +3,11 @@ package com.moview.model.entity;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.moview.common.ErrorMessage;
 
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
@@ -32,7 +34,7 @@ public class Review {
 	private static final String DEFAULT_CONTENT = "";
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private long id;
 
 	@ManyToOne
@@ -40,7 +42,7 @@ public class Review {
 	private Member member;
 
 	@Column(name = "title", length = 100)
-	@NotNull(message = "[ERROR]")
+	@NotNull(message = ErrorMessage.TITTLE_EMPTY)
 	private String title;
 
 	@Column(name = "content", length = 10_000)
@@ -74,9 +76,19 @@ public class Review {
 	}
 
 	public void update(String title, String content) {
+
+		validateEmptyContent(content);
+
 		this.title = title;
 		this.content = content;
 		this.updateDate = Timestamp.from(Instant.now());
+	}
+
+	private void validateEmptyContent(String content) {
+
+		if (Objects.isNull(content) || content.isEmpty()) {
+			throw new IllegalStateException(ErrorMessage.CONTENT_EMPTY);
+		}
 	}
 
 }

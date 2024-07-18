@@ -120,7 +120,9 @@ public class ReviewController {
 
 		Review findReview = reviewService.findByIdWithImagesAndTags(id);
 		reviewTagService.deleteAll(findReview.getReviewTags());
+		reviewPreferenceService.deleteAll(findReview);
 		reviewImageService.deleteAllAtS3AndDB(findReview.getReviewImages());
+		reviewPreferenceService.deleteAll(findReview);
 		reviewService.delete(findReview);
 
 		return ResponseEntity.status(HttpStatus.OK).body("삭제 완료");
@@ -130,7 +132,7 @@ public class ReviewController {
 	public ResponseEntity<String> likeReview(@PathVariable(name = "id") Long id, HttpSession httpSession) {
 
 		String email = (String)httpSession.getAttribute("email");
-		Member member = memberService.findByEmail(email);
+		Member member = memberService.findByEmail("dd@test.com");
 		Review review = reviewService.findByIdWithImagesAndTags(id);
 
 		ReviewPreference reviewPreference = reviewPreferenceService.changePreference(member, review);

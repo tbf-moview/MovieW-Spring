@@ -1,5 +1,6 @@
 package com.moview.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
@@ -13,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
-public class PreferenceRepository {
+public class ReviewPreferenceRepository {
 
 	private final EntityManager em;
 
@@ -39,4 +40,14 @@ public class PreferenceRepository {
 			.getSingleResult();
 	}
 
+	public List<ReviewPreference> findAllByReview(Review review) {
+
+		return em.createQuery("select p from ReviewPreference p where p.review = :review", ReviewPreference.class)
+			.setParameter("review", review)
+			.getResultList();
+	}
+
+	public void delete(ReviewPreference reviewPreference) {
+		em.remove(reviewPreference);
+	}
 }

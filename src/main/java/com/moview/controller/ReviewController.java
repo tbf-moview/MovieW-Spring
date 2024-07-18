@@ -19,11 +19,11 @@ import com.moview.model.dto.request.ReviewRequestDTO;
 import com.moview.model.dto.response.ReviewListResponseDTO;
 import com.moview.model.dto.response.ReviewResponseDTO;
 import com.moview.model.entity.Member;
-import com.moview.model.entity.Preference;
+import com.moview.model.entity.ReviewPreference;
 import com.moview.model.entity.Review;
 import com.moview.model.entity.ReviewImage;
 import com.moview.service.MemberService;
-import com.moview.service.PreferenceService;
+import com.moview.service.ReviewPreferenceService;
 import com.moview.service.ReviewImageService;
 import com.moview.service.ReviewService;
 import com.moview.service.ReviewTagService;
@@ -43,7 +43,7 @@ public class ReviewController {
 	private final ReviewService reviewService;
 	private final MemberService memberService;
 	private final ReviewTagService reviewTagService;
-	private final PreferenceService preferenceService;
+	private final ReviewPreferenceService reviewPreferenceService;
 
 	@PostMapping("/review")
 	@Transactional
@@ -76,13 +76,13 @@ public class ReviewController {
 		Review review = reviewService.findByIdWithImagesAndTags(id);
 		log.info("review : {}", review);
 
-		long likeCount = preferenceService.countPreference(review);
+		long likeCount = reviewPreferenceService.countPreference(review);
 		log.info("likeCount : {}", likeCount);
 
 		String email = (String)httpSession.getAttribute("email");
 		Member member = memberService.findByEmail("ee@test.com");
 
-		Preference preference = preferenceService.findByMemberAndReview(member, review);
+		ReviewPreference reviewPreference = reviewPreferenceService.findByMemberAndReview(member, review);
 
 		return ResponseEntity.status(HttpStatus.OK).body(new ReviewResponseDTO(
 			review.getId(),
@@ -93,7 +93,7 @@ public class ReviewController {
 			review.getCreateDate(),
 			review.getUpdateDate(),
 			likeCount,
-			preference.isLikeSign()
+			reviewPreference.isLikeSign()
 		));
 	}
 
@@ -133,8 +133,8 @@ public class ReviewController {
 		Member member = memberService.findByEmail(email);
 		Review review = reviewService.findByIdWithImagesAndTags(id);
 
-		Preference preference = preferenceService.changePreference(member, review);
-		log.info("preference : {}", preference);
+		ReviewPreference reviewPreference = reviewPreferenceService.changePreference(member, review);
+		log.info("reviewPreference : {}", reviewPreference);
 
 		return ResponseEntity.status(HttpStatus.OK).body("좋아요 변경 완료");
 	}

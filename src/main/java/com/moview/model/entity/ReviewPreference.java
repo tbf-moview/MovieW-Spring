@@ -18,7 +18,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @Getter
 @ToString
-public class Preference {
+public class ReviewPreference {
 
 	@Id
 	@ManyToOne
@@ -33,18 +33,18 @@ public class Preference {
 	@Column(nullable = false)
 	private Timestamp likeDate;
 
-	@Column(columnDefinition = "TINYINT(1)")
+	@Column(name = "is_like",columnDefinition = "TINYINT(1)")
 	private boolean likeSign;
 
-	private Preference(Member member, Review review, Timestamp likeDate, boolean likeSign) {
+	private ReviewPreference(Member member, Review review, Timestamp likeDate, boolean likeSign) {
 		this.member = member;
 		this.review = review;
 		this.likeDate = likeDate;
 		this.likeSign = likeSign;
 	}
 
-	public static Preference of(Member member, Review review) {
-		return new Preference(member, review, Timestamp.from(Instant.now()), true);
+	public static ReviewPreference of(Member member, Review review) {
+		return new ReviewPreference(member, review, Timestamp.from(Instant.now()), true);
 	}
 
 	public void updateLike() {

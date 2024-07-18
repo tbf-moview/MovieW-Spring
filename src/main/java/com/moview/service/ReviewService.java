@@ -23,7 +23,7 @@ public class ReviewService {
 	private final ReviewRepository reviewRepository;
 
 	public Review save(Member member, String title) {
-		Review review = Review.of(member, title, null);
+		Review review = Review.of(member, title);
 		return reviewRepository.save(review);
 	}
 

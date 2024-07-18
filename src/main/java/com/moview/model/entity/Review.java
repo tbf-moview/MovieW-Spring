@@ -17,6 +17,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -28,8 +29,10 @@ import lombok.ToString;
 @ToString
 public class Review {
 
+	private static final String DEFAULT_CONTENT = "";
+
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
 
 	@ManyToOne
@@ -37,6 +40,7 @@ public class Review {
 	private Member member;
 
 	@Column(name = "title", length = 100)
+	@NotNull(message = "[ERROR]")
 	private String title;
 
 	@Column(name = "content", length = 10_000)
@@ -56,8 +60,7 @@ public class Review {
 	@JsonManagedReference
 	private Set<ReviewTag> reviewTags = new HashSet<>();
 
-	private Review(Member member, String title, @Nullable String content, Timestamp createDate,
-		@Nullable Timestamp updateDate) {
+	private Review(Member member, String title, @Nullable String content, Timestamp createDate, Timestamp updateDate) {
 		this.member = member;
 		this.title = title;
 		this.content = content;
@@ -65,9 +68,9 @@ public class Review {
 		this.updateDate = updateDate;
 	}
 
-	public static Review of(Member member, String title, @Nullable String content) {
+	public static Review of(Member member, String title) {
 		Timestamp now = Timestamp.from(Instant.now());
-		return new Review(member, title, content, now, now);
+		return new Review(member, title, DEFAULT_CONTENT, now, now);
 	}
 
 	public void update(String title, String content) {

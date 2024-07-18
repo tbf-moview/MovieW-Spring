@@ -88,7 +88,7 @@ public class ReviewController {
 			review.getId(),
 			review.getTitle(),
 			review.getContent(),
-			member.getNickname(),
+			review.getMember(),
 			review.getReviewTags(),
 			review.getCreateDate(),
 			review.getUpdateDate(),

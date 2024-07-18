@@ -3,6 +3,7 @@ package com.moview.model.dto.response;
 import java.sql.Timestamp;
 import java.util.Set;
 
+import com.moview.model.entity.Member;
 import com.moview.model.entity.ReviewTag;
 
 import lombok.AllArgsConstructor;
@@ -19,7 +20,7 @@ public class ReviewResponseDTO {
 	private long id;
 	private String title;
 	private String content;
-	private String nickname;
+	private Member member;
 	private Set<ReviewTag> reviewTags;
 	private Timestamp createDate;
 	private Timestamp updateDate;

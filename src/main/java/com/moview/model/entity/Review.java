@@ -42,7 +42,7 @@ public class Review {
 	private Member member;
 
 	@Column(name = "title", length = 100)
-	@NotNull(message = ErrorMessage.TITTLE_EMPTY)
+	@NotNull(message = ErrorMessage.TITLE_EMPTY)
 	private String title;
 
 	@Column(name = "content", length = 10_000)

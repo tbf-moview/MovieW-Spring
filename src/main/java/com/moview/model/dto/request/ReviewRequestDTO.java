@@ -24,8 +24,8 @@ public class ReviewRequestDTO {
 
 	private static final int TEXTS_MIN_SIZE = 1;
 
-	@NotNull(message = ErrorMessage.TITTLE_EMPTY)
-	@NotEmpty(message = ErrorMessage.TITTLE_EMPTY)
+	@NotNull(message = ErrorMessage.TITLE_EMPTY)
+	@NotEmpty(message = ErrorMessage.TITLE_EMPTY)
 	private String title;
 
 	private List<MultipartFile> images;

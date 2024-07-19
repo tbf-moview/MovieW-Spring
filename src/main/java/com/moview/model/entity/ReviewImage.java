@@ -1,5 +1,7 @@
 package com.moview.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,13 +12,11 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 @Getter
 @Entity
 @NoArgsConstructor
 @Table(name = "images")
-@ToString
 public class ReviewImage {
 
 	@Id
@@ -25,6 +25,7 @@ public class ReviewImage {
 
 	@ManyToOne
 	@JoinColumn(name = "review_id", nullable = false)
+	@JsonBackReference
 	private Review review;
 
 	@Column(nullable = false, length = 1000)
@@ -33,14 +34,19 @@ public class ReviewImage {
 	@Column(length = 1000)
 	private String fileUrl;
 
-	private ReviewImage(Review review, String type, String fileUrl) {
+	private ReviewImage(Review review, String fileName, String fileUrl) {
 		this.review = review;
-		this.fileName = type;
+		this.fileName = fileName;
 		this.fileUrl = fileUrl;
 	}
 
 	public static ReviewImage of(Review review, String fileName, String fileURL) {
 		return new ReviewImage(review, fileName, fileURL);
+	}
+
+	@Override
+	public String toString() {
+		return "ReviewImage (id=" + id + ", fileName=" + fileName + ", fileUrl=" + fileUrl + ")";
 	}
 
 }

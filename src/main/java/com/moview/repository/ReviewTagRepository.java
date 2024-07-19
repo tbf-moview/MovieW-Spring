@@ -1,22 +1,25 @@
 package com.moview.repository;
 
-import java.util.Optional;
-
 import org.springframework.stereotype.Repository;
 
-import com.moview.model.entity.Member;
+import com.moview.model.entity.ReviewTag;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
-public class MemberRepository {
+public class ReviewTagRepository {
 
 	private final EntityManager em;
 
-	public Optional<Member> findByEmail(String email) {
-		return Optional.ofNullable(em.find(Member.class, email));
+	public ReviewTag save(ReviewTag reviewTag) {
+		em.persist(reviewTag);
+		return reviewTag;
+	}
+
+	public void delete(ReviewTag reviewTag) {
+		em.remove(reviewTag);
 	}
 
 }

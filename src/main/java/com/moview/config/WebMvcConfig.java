@@ -32,14 +32,4 @@ public class WebMvcConfig implements WebMvcConfigurer {
 		return source;
 	}
 
-	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		return http.authorizeHttpRequests((auth) -> auth
-				.anyRequest().permitAll())
-			.cors((cors) -> cors.configurationSource(corsConfigurationSource()))
-			.csrf(AbstractHttpConfigurer::disable)
-			.build();
-
-	}
-
 }

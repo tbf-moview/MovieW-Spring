@@ -2,8 +2,12 @@ package com.moview.model.entity;
 
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.moview.common.ErrorMessage;
 
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
@@ -15,6 +19,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -26,6 +31,8 @@ import lombok.ToString;
 @ToString
 public class Review {
 
+	private static final String DEFAULT_CONTENT = "";
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
@@ -35,6 +42,7 @@ public class Review {
 	private Member member;
 
 	@Column(name = "title", length = 100)
+	@NotNull(message = ErrorMessage.TITLE_EMPTY)
 	private String title;
 
 	@Column(name = "content", length = 10_000)
@@ -47,13 +55,14 @@ public class Review {
 	private Timestamp updateDate;
 
 	@OneToMany(mappedBy = "review")
-	private List<ReviewImage> reviewImages = new ArrayList<>();
+	@JsonManagedReference
+	private Set<ReviewImage> reviewImages = new HashSet<>();
 
 	@OneToMany(mappedBy = "review")
-	private List<ReviewTag> reviewTags = new ArrayList<>();
+	@JsonManagedReference
+	private Set<ReviewTag> reviewTags = new HashSet<>();
 
-	private Review(Member member, String title, @Nullable String content, Timestamp createDate,
-		@Nullable Timestamp updateDate) {
+	private Review(Member member, String title, @Nullable String content, Timestamp createDate, Timestamp updateDate) {
 		this.member = member;
 		this.title = title;
 		this.content = content;
@@ -61,14 +70,25 @@ public class Review {
 		this.updateDate = updateDate;
 	}
 
-	public static Review of(Member member, String title, @Nullable String content, Timestamp createDate,
-		@Nullable Timestamp updateDate) {
-		return new Review(member, title, content, createDate, updateDate);
-	}
-
-	public static Review of(Member member, String title, @Nullable String content) {
+	public static Review of(Member member, String title) {
 		Timestamp now = Timestamp.from(Instant.now());
-		return new Review(member, title, content, now, now);
-
+		return new Review(member, title, DEFAULT_CONTENT, now, now);
 	}
+
+	public void update(String title, String content) {
+
+		validateEmptyContent(content);
+
+		this.title = title;
+		this.content = content;
+		this.updateDate = Timestamp.from(Instant.now());
+	}
+
+	private void validateEmptyContent(String content) {
+
+		if (Objects.isNull(content) || content.isEmpty()) {
+			throw new IllegalStateException(ErrorMessage.CONTENT_EMPTY);
+		}
+	}
+
 }

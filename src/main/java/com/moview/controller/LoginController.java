@@ -2,6 +2,7 @@ package com.moview.controller;
 
 import java.util.Map;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,24 +31,26 @@ public class LoginController {
 	private final JwtTokenProvider jwtTokenProvider;
 
 	@PostMapping("/kakao")
-	public String callback(@RequestBody Map<String, Object> codeMap, HttpServletResponse response) {
+	public ResponseEntity<String> callback(@RequestBody Map<String, Object> codeMap, HttpServletResponse response) {
 
 		KakaoTokenVO kakaoTokenVO = kakaoConnection.getToken(codeMap);
 		KakaoUserVO kakaoUserVO = kakaoConnection.getUserInfo(kakaoTokenVO);
 
 		Member member = kakaoConnection.convertToMember(kakaoUserVO);
+		memberService.saveMember(member);
 
 		//토큰 생성
-		MoviewTokenVO moviewTokenVO = new MoviewTokenVO(kakaoUserVO.getAccountEmail(),
-			kakaoUserVO.getProfileNickname());
+		MoviewTokenVO moviewTokenVO = new MoviewTokenVO(kakaoUserVO.getEmail(),
+			kakaoUserVO.getNickname());
 		String moviewAccessToken = jwtTokenProvider.generateAccessToken(moviewTokenVO.getEmail(),
 			moviewTokenVO.getNickname());
 		String moviewRefreshToken = jwtTokenProvider.generateRefreshToken(moviewTokenVO.getEmail());
 
 		// 쿠키 생성
 		CookieUtil.createCookie(response,"jwtToken",moviewAccessToken,43200);
-		System.out.println(moviewAccessToken);
-		return "redirect:/";
+		System.out.println(jwtTokenProvider.decodeJwt(moviewAccessToken));
+
+		return ResponseEntity.ok("login successfully");
 	}
 
 }

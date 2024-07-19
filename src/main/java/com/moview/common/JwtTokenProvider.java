@@ -8,7 +8,7 @@ import javax.crypto.SecretKey;
 
 import org.springframework.stereotype.Component;
 
-
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -24,7 +24,7 @@ public class JwtTokenProvider {
 
 	@PostConstruct
 	protected void init() {
-		// secretKey = Base64.getEncoder().encodeToString(key.getEncoded());
+		// secretKey = Base64.getEncoder().encodeToString(key.getEncoded()); // 시크릿 키 생성 (한 번 하고 저장)
 		// secretkey는 후에 properties에 추가
 		secretKey = "wKiLdOXjE24YA3h8ETn1p19EnXRjUBMKDbY0sdw/jjA=";
 	}
@@ -53,6 +53,20 @@ public class JwtTokenProvider {
 			.setExpiration(new Date(System.currentTimeMillis() + refreshTokenValidityInMilliseconds))
 			.signWith(SignatureAlgorithm.HS256, secretKey)
 			.compact();
+	}
+
+	public Claims decodeJwt(String jwt) {
+		try {
+			// JWT를 복호화하여 Claims 객체로 반환
+			return Jwts.parserBuilder()
+				.setSigningKey(secretKey)
+				.build()
+				.parseClaimsJws(jwt)
+				.getBody();
+		} catch (Exception e) {
+			// 복호화 실패 시 예외 처리
+			throw new RuntimeException("JWT decoding failed", e);
+		}
 	}
 
 	public String resolveToken(HttpServletRequest req) {

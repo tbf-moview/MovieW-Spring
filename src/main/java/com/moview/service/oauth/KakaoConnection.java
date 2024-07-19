@@ -58,7 +58,6 @@ public class KakaoConnection {
 			bodyParam.add("redirect_url=" + redirectUri);
 			bodyParam.add("code=" + code);
 			bodyParam.add("client_secret=" + clientSecret);
-			System.out.println(bodyParam);
 
 			// 요청보내기
 			try (OutputStream os = conn.getOutputStream()) {
@@ -78,13 +77,12 @@ public class KakaoConnection {
 				.refreshTokenExpiresIn(jsonObject.get("refresh_token_expires_in").getAsInt())
 				.build();
 
-			System.out.println(kakaoTokenVO.toString());
-
 			return kakaoTokenVO;
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
 		return kakaoTokenVO;
 	}
 
@@ -110,11 +108,10 @@ public class KakaoConnection {
 
 			// KakaoUser 생성
 			kakaoUserVO = KakaoUserVO.builder()
-				.profileNickname(profile.get("nickname").getAsString())
-				.accountEmail(kakaoAccount.get("email").getAsString())
+				.nickname(profile.get("nickname").getAsString())
+				.email(kakaoAccount.get("email").getAsString())
 				.build();
 
-			System.out.println(kakaoUserVO.toString());
 			return kakaoUserVO;
 
 		} catch (Exception e) {
@@ -125,6 +122,6 @@ public class KakaoConnection {
 
 	public Member convertToMember(KakaoUserVO kakaoUserVO) {
 		// KakaoUser를 Member 객체로 변환하는 로직
-		return new Member(kakaoUserVO.getAccountEmail(), kakaoUserVO.getProfileNickname());
+		return new Member(kakaoUserVO.getEmail(), kakaoUserVO.getNickname());
 	}
 }

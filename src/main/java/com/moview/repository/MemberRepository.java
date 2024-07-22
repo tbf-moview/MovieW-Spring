@@ -3,7 +3,6 @@ package com.moview.repository;
 import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.moview.model.entity.Member;
 
@@ -22,12 +21,12 @@ public class MemberRepository {
 		return Optional.ofNullable(em.find(Member.class, email));
 	}
 
-	@Transactional
+
 	public void save(Member member) {
 		em.persist(member);
 	}
 
-	@Transactional
+
 	public void deleteMemberByEmail(String email) {
 		Member member = em.find(Member.class, email);
 		if (member != null) {

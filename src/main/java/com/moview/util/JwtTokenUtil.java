@@ -1,8 +1,9 @@
-package com.moview.common;
+package com.moview.util;
 
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import javax.crypto.SecretKey;
 
@@ -16,7 +17,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 
 @Component
-public class JwtTokenProvider {
+public class JwtTokenUtil {
 
 	SecretKey key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
@@ -36,16 +37,40 @@ public class JwtTokenProvider {
 	public String generateAccessToken(String email,String nickname) {
 		Map<String, Object> additionalClaims = new HashMap<>();
 		additionalClaims.put("nickname", nickname); // 닉네임 추가
+		additionalClaims.put("email", email); // 닉네임 추가
 		return Jwts.builder()
-			.setSubject(email) // email
 			.setClaims(additionalClaims)
+			.setSubject(email) // email
 			.setIssuedAt(new Date())
 			.setExpiration(new Date(System.currentTimeMillis() + accessTokenValidityInMilliseconds))
 			.signWith(SignatureAlgorithm.HS256, secretKey)
 			.compact();
 	}
 
+	public String extractUserEmail(String token) {
+		return extractClaim(token, Claims::getSubject);
+	}
+
+	public String extractNickname(String token) {
+		return extractClaim(token, claims -> claims.get("nickname", String.class));
+	}
+
+	public Date extractExpiration(String token) {
+		return extractClaim(token, Claims::getExpiration);
+	}
+
+	public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+		final Claims claims = decodeJwt(token);
+		return claimsResolver.apply(claims);
+	}
+
+
+	private Boolean isTokenExpired(String token) {
+		return extractExpiration(token).before(new Date());
+	}
+
 	// 리프레시 토큰 생성
+
 	public String generateRefreshToken(String email) {
 		return Jwts.builder()
 			.setSubject(email)

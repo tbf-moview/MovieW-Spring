@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletResponse;
 
-import com.moview.common.JwtTokenProvider;
+import com.moview.util.JwtTokenUtil;
 import com.moview.model.entity.Member;
 import com.moview.model.vo.KakaoTokenVO;
 import com.moview.model.vo.KakaoUserVO;
@@ -28,7 +28,7 @@ public class LoginController {
 
 	private final MemberService memberService;
 	private final KakaoConnection kakaoConnection;
-	private final JwtTokenProvider jwtTokenProvider;
+	private final JwtTokenUtil jwtTokenUtil;
 
 	@PostMapping("/kakao")
 	public ResponseEntity<String> callback(@RequestBody Map<String, Object> codeMap, HttpServletResponse response) {
@@ -42,14 +42,12 @@ public class LoginController {
 		//토큰 생성
 		MoviewTokenVO moviewTokenVO = new MoviewTokenVO(kakaoUserVO.getEmail(),
 			kakaoUserVO.getNickname());
-		String moviewAccessToken = jwtTokenProvider.generateAccessToken(moviewTokenVO.getEmail(),
+		String moviewAccessToken = jwtTokenUtil.generateAccessToken(moviewTokenVO.getEmail(),
 			moviewTokenVO.getNickname());
-		String moviewRefreshToken = jwtTokenProvider.generateRefreshToken(moviewTokenVO.getEmail());
+		String moviewRefreshToken = jwtTokenUtil.generateRefreshToken(moviewTokenVO.getEmail());
 
 		// 쿠키 생성
 		CookieUtil.createCookie(response,"jwtToken",moviewAccessToken,43200);
-		System.out.println(jwtTokenProvider.decodeJwt(moviewAccessToken));
-
 		return ResponseEntity.ok("login successfully");
 	}
 

@@ -13,8 +13,9 @@ public class ReviewImageRepository {
 
 	private final EntityManager em;
 
-	public void save(ReviewImage reviewImage) {
+	public ReviewImage save(ReviewImage reviewImage) {
 		em.persist(reviewImage);
+		return reviewImage;
 	}
 
 	public void delete(ReviewImage reviewImage) {

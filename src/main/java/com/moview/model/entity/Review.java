@@ -34,7 +34,7 @@ public class Review {
 	private static final String DEFAULT_CONTENT = "";
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private long id;
 
 	@ManyToOne

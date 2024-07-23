@@ -1,13 +1,9 @@
 package com.moview.service;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.moview.model.entity.Review;
 import com.moview.model.entity.ReviewImage;
@@ -22,39 +18,15 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class ReviewImageService {
 
-	private static final String DIR_NAME = "review-images/";
-
 	private final ReviewImageRepository reviewImageRepository;
 	private final S3Service s3Service;
 
-	public List<ReviewImage> saveAllAtS3AndDB(Optional<List<MultipartFile>> optionalMultipartFiles, Review review) {
+	public List<ReviewImage> saveAll(Review review, List<ImageVO> images) {
 
-		if (optionalMultipartFiles.isEmpty()) {
-			return new ArrayList<>();
-		}
+		return images.stream()
+			.map(imageVO -> reviewImageRepository.save(ReviewImage.of(review, imageVO.fileName(), imageVO.fileUrl())))
+			.toList();
 
-		List<MultipartFile> originalFiles = optionalMultipartFiles.get();
-		List<ReviewImage> images = new ArrayList<>();
-
-		try {
-			for (MultipartFile originalFile : originalFiles) {
-				ReviewImage reviewImage = uploadS3AndSaveDBReviewImage(review, originalFile);
-				images.add(reviewImage);
-			}
-
-		} catch (IOException e) {
-			deleteAllUploadReviewImage(images);
-			throw new RuntimeException(e);
-		}
-
-		return images;
-	}
-
-	private ReviewImage uploadS3AndSaveDBReviewImage(Review review, MultipartFile originalFile) throws IOException {
-		ImageVO uploadImageVO = s3Service.upload(originalFile, DIR_NAME, String.valueOf(review.getId()));
-		ReviewImage reviewImage = ReviewImage.of(review, uploadImageVO.fileName(), uploadImageVO.fileUrl());
-		reviewImageRepository.save(reviewImage);
-		return reviewImage;
 	}
 
 	public void deleteAllAtS3AndDB(Set<ReviewImage> images) {
@@ -67,11 +39,4 @@ public class ReviewImageService {
 		reviewImageRepository.delete(reviewImage);
 		s3Service.deleteS3File(reviewImage.getFileName());
 	}
-
-	private void deleteAllUploadReviewImage(List<ReviewImage> images) {
-		for (ReviewImage image : images) {
-			s3Service.deleteS3File(image.getFileName());
-		}
-	}
-
 }

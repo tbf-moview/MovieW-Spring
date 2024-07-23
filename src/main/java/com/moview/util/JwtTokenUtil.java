@@ -80,13 +80,13 @@ public class JwtTokenUtil {
 			.compact();
 	}
 
-	public Claims decodeJwt(String jwt) {
+	public Claims decodeJwt(String token) {
 		try {
 			// JWT를 복호화하여 Claims 객체로 반환
 			return Jwts.parserBuilder()
 				.setSigningKey(secretKey)
 				.build()
-				.parseClaimsJws(jwt)
+				.parseClaimsJws(token)
 				.getBody();
 		} catch (Exception e) {
 			// 복호화 실패 시 예외 처리

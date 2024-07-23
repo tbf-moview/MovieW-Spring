@@ -19,6 +19,7 @@ public class MemberRepository {
 
 	public Optional<Member> findByEmail(String email) {
 		return Optional.ofNullable(em.find(Member.class, email));
+
 	}
 
 

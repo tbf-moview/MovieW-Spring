@@ -20,7 +20,7 @@ public class ReviewRepository {
 	private final EntityManager em;
 
 	public Review save(Review review) {
-		em.persist(review);
+		em.persist(em.merge(review));
 		return review;
 	}
 

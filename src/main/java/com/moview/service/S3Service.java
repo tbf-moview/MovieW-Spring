@@ -42,16 +42,19 @@ public class S3Service {
 			uploadToS3(uploadFile, uploadFilename);
 
 		} catch (Exception e) {
-			log.error("파일 업로드 중 예외 발생 : {} - {}", e.getClass().getSimpleName() , e.getMessage(), e);
-			FileManager.deleteFile(uploadFile);
+			log.error("파일 업로드 중 예외 발생 : {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
 			throw new RuntimeException(e);
+
+		} finally {
+			FileManager.deleteFile(uploadFile);
 		}
 
 		String url = amazonS3.getUrl(bucket, uploadFilename).toString();
 		return new ImageVO(uploadFilename, url);
 	}
 
-	public List<ImageVO> uploadAll(Optional<List<MultipartFile>> optionalMultipartFiles, String dirName, String prefixName) {
+	public List<ImageVO> uploadAll(Optional<List<MultipartFile>> optionalMultipartFiles, String dirName,
+		String prefixName) {
 
 		if (optionalMultipartFiles.isEmpty()) {
 			return new ArrayList<>();
@@ -67,11 +70,11 @@ public class S3Service {
 				images.add(image);
 			}
 
-		}catch (IOException | RuntimeException e) {
+		} catch (IOException | RuntimeException e) {
 			log.error(e.getMessage());
 
 			for (ImageVO image : images) {
-				deleteS3File(image.fileName());
+				delete(image.fileName());
 			}
 
 			throw new RuntimeException(e);
@@ -86,7 +89,7 @@ public class S3Service {
 			.withCannedAcl(CannedAccessControlList.PublicRead));
 	}
 
-	public void deleteS3File(String fileName) {
+	public void delete(String fileName) {
 
 		String decodedFileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8);
 		amazonS3.deleteObject(bucket, decodedFileName);

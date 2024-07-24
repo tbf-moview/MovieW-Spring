@@ -3,6 +3,7 @@ package com.moview.controller;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -59,33 +60,21 @@ public class ReviewController {
 		String email = (String)httpSession.getAttribute("email");
 		Member member = memberService.findByEmail("ee@test.com");
 
-		// Todo: 업로드 처리 이후 오류 발생시, S3이미지 삭제처리 개선
 		List<ImageVO> imageVOs = new ArrayList<>();
-		Review createdReview = new Review();
 
 		try {
-
-			createdReview = reviewService.save(member, reviewRequestDTO.getTitle());
-			log.info("createdReview : {}", createdReview.toString());
+			UUID reviewID = UUID.randomUUID();
 
 			imageVOs = s3Service.uploadAll(
-				Optional.ofNullable(reviewRequestDTO.getImages()), DIR_NAME, String.valueOf(createdReview.getId()));
+				Optional.ofNullable(reviewRequestDTO.getImages()), DIR_NAME, reviewID.toString());
 
-			List<ReviewImage> reviewImages = reviewImageService.saveAll(createdReview, imageVOs);
-			createdReview = reviewService.update(createdReview, reviewRequestDTO.getTitle(),
-				reviewRequestDTO.getTexts(), reviewImages);
+			Review review = reviewService.save(reviewID, member, imageVOs, reviewRequestDTO);
+			log.info("review : {}", review);
 
-		} catch (RuntimeException e) {
-
-			reviewService.delete(createdReview);
-			imageVOs.forEach(imageVO -> s3Service.deleteS3File(imageVO.fileName()));
-
-			throw e;
+		} catch (Exception e) {
+			imageVOs.forEach(imageVO -> s3Service.delete(imageVO.fileName()));
+			throw new RuntimeException(e);
 		}
-
-		reviewTagService.saveAll(createdReview, Optional.ofNullable(reviewRequestDTO.getTags()));
-
-		log.info("createdReview : {}", createdReview.toString());
 
 		return ResponseEntity.status(HttpStatus.CREATED).body("create complete");
 	}
@@ -122,7 +111,7 @@ public class ReviewController {
 		@Validated @ModelAttribute ReviewRequestDTO reviewRequestDTO) {
 
 		Review findReview = reviewService.findByIdWithImagesAndTags(id);
-		reviewImageService.deleteAllAtS3AndDB(findReview.getReviewImages());
+		// reviewImageService.deleteAllAtS3AndDB(findReview.getReviewImages());
 		reviewTagService.deleteAll(findReview.getReviewTags());
 
 		List<ImageVO> imageVOs = s3Service.uploadAll(
@@ -146,8 +135,7 @@ public class ReviewController {
 		Review findReview = reviewService.findByIdWithImagesAndTags(id);
 		reviewTagService.deleteAll(findReview.getReviewTags());
 		reviewPreferenceService.deleteAll(findReview);
-		reviewImageService.deleteAllAtS3AndDB(findReview.getReviewImages());
-		reviewPreferenceService.deleteAll(findReview);
+		// reviewImageService.deleteAllAtS3AndDB(findReview.getReviewImages());
 		reviewService.delete(findReview);
 
 		return ResponseEntity.status(HttpStatus.OK).body("삭제 완료");

@@ -1,21 +1,31 @@
 package com.moview.service;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
 import com.moview.common.ErrorMessage;
+import com.moview.model.dto.request.ReviewRequestDTO;
 import com.moview.model.dto.response.ReviewListResponseDTO;
 import com.moview.model.entity.Member;
 import com.moview.model.entity.Review;
 import com.moview.model.entity.ReviewImage;
+import com.moview.model.entity.ReviewTag;
+import com.moview.model.vo.ImageVO;
 import com.moview.repository.ReviewRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Transactional
 public class ReviewService {
 
@@ -25,15 +35,43 @@ public class ReviewService {
 
 	private final ReviewRepository reviewRepository;
 
-	public Review save(Member member, String title) {
-		Review review = Review.of(member, title);
+	public Review save(UUID reviewID, Member member, List<ImageVO> imageVOs,
+		ReviewRequestDTO reviewRequestDTO) {
+
+		Review review = Review.of(reviewID, member, reviewRequestDTO.getTitle());
+
+		List<ReviewImage> reviewImages = makeReviewImages(review, imageVOs);
+		Set<ReviewTag> reviewTags = makeReviewTags(review, reviewRequestDTO.getTags());
+
+		String content = makeContent(reviewRequestDTO.getTexts(), reviewImages);
+		review.updateContent(content);
+
+		review.addReviewImages(reviewImages);
+		review.addReviewTags(reviewTags);
+
 		return reviewRepository.save(review);
 	}
 
-	public Review update(Review review, String title, List<String> texts, List<ReviewImage> reviewImages) {
-		String content = makeContent(texts, reviewImages);
-		review.update(title, content);
-		return review;
+	private List<ReviewImage> makeReviewImages(Review review, List<ImageVO> imageVOs) {
+
+		if (imageVOs.isEmpty()) {
+			return new ArrayList<>();
+		}
+
+		return imageVOs.stream()
+			.map(imageVO -> ReviewImage.of(review, imageVO.fileName(), imageVO.fileUrl()))
+			.toList();
+	}
+
+	private Set<ReviewTag> makeReviewTags(Review review, List<String> tags) {
+
+		if (tags.isEmpty()) {
+			return new LinkedHashSet<>();
+		}
+
+		return tags.stream()
+			.map(tag -> ReviewTag.of(review, tag))
+			.collect(Collectors.toSet());
 	}
 
 	public String makeContent(List<String> texts, List<ReviewImage> reviewImages) {
@@ -45,6 +83,12 @@ public class ReviewService {
 		}
 
 		return stringBuilder.append(texts.getLast()).toString();
+	}
+
+	public Review update(Review review, String title, List<String> texts, List<ReviewImage> reviewImages) {
+		String content = makeContent(texts, reviewImages);
+		review.updateContent(content);
+		return review;
 	}
 
 	public Review findByIdWithImagesAndTags(Long id) {

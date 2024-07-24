@@ -1,6 +1,7 @@
 package com.moview.model.dto.response;
 
 import java.sql.Timestamp;
+import java.util.UUID;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,7 +16,7 @@ import lombok.ToString;
 @ToString
 public class ReviewListResponseDTO {
 
-	private long id;
+	private UUID id;
 	private String email;
 	private String nickname;
 	private String title;

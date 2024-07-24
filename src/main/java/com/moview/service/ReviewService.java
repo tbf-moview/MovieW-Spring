@@ -3,6 +3,7 @@ package com.moview.service;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -40,8 +41,8 @@ public class ReviewService {
 
 		Review review = Review.of(reviewID, member, reviewRequestDTO.getTitle());
 
-		List<ReviewImage> reviewImages = makeReviewImages(review, imageVOs);
-		Set<ReviewTag> reviewTags = makeReviewTags(review, reviewRequestDTO.getTags());
+		List<ReviewImage> reviewImages = makeReviewImages(review, Optional.ofNullable(imageVOs));
+		Set<ReviewTag> reviewTags = makeReviewTags(review, Optional.ofNullable(reviewRequestDTO.getTags()));
 
 		String content = makeContent(reviewRequestDTO.getTexts(), reviewImages);
 		review.updateContent(content);
@@ -52,26 +53,21 @@ public class ReviewService {
 		return reviewRepository.save(review);
 	}
 
-	private List<ReviewImage> makeReviewImages(Review review, List<ImageVO> imageVOs) {
+	private List<ReviewImage> makeReviewImages(Review review, Optional<List<ImageVO>> optionalImageVOs) {
 
-		if (imageVOs.isEmpty()) {
-			return new ArrayList<>();
-		}
-
-		return imageVOs.stream()
+		return optionalImageVOs.map(imageVOS -> imageVOS
+			.stream()
 			.map(imageVO -> ReviewImage.of(review, imageVO.fileName(), imageVO.fileUrl()))
-			.toList();
+			.toList()).orElseGet(ArrayList::new);
+
 	}
 
-	private Set<ReviewTag> makeReviewTags(Review review, List<String> tags) {
+	private Set<ReviewTag> makeReviewTags(Review review, Optional<List<String>> optionalTags) {
 
-		if (tags.isEmpty()) {
-			return new LinkedHashSet<>();
-		}
-
-		return tags.stream()
+		return optionalTags.map(strings -> strings.stream()
 			.map(tag -> ReviewTag.of(review, tag))
-			.collect(Collectors.toSet());
+			.collect(Collectors.toSet())).orElseGet(LinkedHashSet::new);
+
 	}
 
 	public String makeContent(List<String> texts, List<ReviewImage> reviewImages) {

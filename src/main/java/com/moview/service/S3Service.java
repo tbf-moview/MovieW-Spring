@@ -2,8 +2,6 @@ package com.moview.service;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class S3Service {
+
+	private static final String DELETE_DIR_NAME = "delete/";
 
 	private final AmazonS3 amazonS3;
 	private final String bucket;
@@ -74,7 +74,7 @@ public class S3Service {
 			log.error(e.getMessage());
 
 			for (ImageVO image : images) {
-				delete(image.fileName());
+				delete(image.fileName(), dirName);
 			}
 
 			throw new RuntimeException(e);
@@ -89,11 +89,25 @@ public class S3Service {
 			.withCannedAcl(CannedAccessControlList.PublicRead));
 	}
 
-	public void delete(String fileName) {
+	public String delete(String fileName, String originalDirName) {
 
-		String decodedFileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8);
-		amazonS3.deleteObject(bucket, decodedFileName);
-		log.info("delete file {}", decodedFileName);
+		String deleteFileName = DELETE_DIR_NAME + fileName.substring(originalDirName.length());
+
+		amazonS3.copyObject(bucket, fileName, bucket, deleteFileName);
+		amazonS3.deleteObject(bucket, fileName);
+		log.info("soft delete file {} to {}", fileName, deleteFileName);
+
+		return deleteFileName;
+	}
+
+	public void rollBack(String deletedFileName, String originalDirName) {
+
+		String rollBackFileName = originalDirName + deletedFileName.substring(DELETE_DIR_NAME.length());
+
+		amazonS3.copyObject(bucket, deletedFileName, bucket, rollBackFileName);
+		amazonS3.deleteObject(bucket, deletedFileName);
+		log.info("roll back file {} to {}", deletedFileName, rollBackFileName);
+
 	}
 
 }

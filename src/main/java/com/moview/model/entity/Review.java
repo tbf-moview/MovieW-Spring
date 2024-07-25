@@ -36,8 +36,6 @@ public class Review {
 	private static final String DEFAULT_CONTENT = "";
 
 	@Id
-	@GeneratedValue
-	@UuidGenerator
 	@Column(length = 36, columnDefinition = "VARCHAR(36)")
 	private UUID id;
 

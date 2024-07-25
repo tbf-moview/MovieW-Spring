@@ -3,6 +3,7 @@ package com.moview.controller;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -72,7 +73,7 @@ public class ReviewController {
 			log.info("review : {}", review);
 
 		} catch (Exception e) {
-			imageVOs.forEach(imageVO -> s3Service.delete(imageVO.fileName()));
+			imageVOs.forEach(imageVO -> s3Service.delete(imageVO.fileName(), DIR_NAME));
 			throw new RuntimeException(e);
 		}
 
@@ -80,7 +81,7 @@ public class ReviewController {
 	}
 
 	@GetMapping("/review/{id}")
-	public ResponseEntity<ReviewResponseDTO> findReview(@PathVariable(name = "id") Long id, HttpSession httpSession) {
+	public ResponseEntity<ReviewResponseDTO> findReview(@PathVariable(name = "id") UUID id, HttpSession httpSession) {
 
 		Review review = reviewService.findByIdWithImagesAndTags(id);
 		log.info("review : {}", review);
@@ -107,7 +108,7 @@ public class ReviewController {
 	}
 
 	@PutMapping("/review/{id}")
-	public ResponseEntity<String> updateReview(@PathVariable(name = "id") Long id,
+	public ResponseEntity<String> updateReview(@PathVariable(name = "id") UUID id,
 		@Validated @ModelAttribute ReviewRequestDTO reviewRequestDTO) {
 
 		Review findReview = reviewService.findByIdWithImagesAndTags(id);
@@ -130,19 +131,40 @@ public class ReviewController {
 	}
 
 	@DeleteMapping("/review/{id}")
-	public ResponseEntity<String> deleteReview(@PathVariable(name = "id") Long id) {
+	public ResponseEntity<String> deleteReview(@PathVariable(name = "id") UUID id) {
 
 		Review findReview = reviewService.findByIdWithImagesAndTags(id);
-		reviewTagService.deleteAll(findReview.getReviewTags());
-		reviewPreferenceService.deleteAll(findReview);
-		// reviewImageService.deleteAllAtS3AndDB(findReview.getReviewImages());
-		reviewService.delete(findReview);
 
-		return ResponseEntity.status(HttpStatus.OK).body("삭제 완료");
+		List<String> deletedFileNames = new ArrayList<>();
+
+		try {
+			Set<ReviewImage> reviewImages = findReview.getReviewImages();
+
+			for (ReviewImage reviewImage : reviewImages) {
+				String deletedFileName = s3Service.delete(reviewImage.getFileName(), DIR_NAME);
+				deletedFileNames.add(deletedFileName);
+			}
+
+			throw new Exception("testException");
+
+			// reviewService.delete(findReview);
+
+		} catch (Exception e) {
+
+			log.error("error : {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
+
+			for (String deletedFileName : deletedFileNames) {
+				s3Service.rollBack(deletedFileName, DIR_NAME);
+			}
+
+			throw new RuntimeException(e);
+		}
+
+		// return ResponseEntity.status(HttpStatus.OK).body("delete complete");
 	}
 
 	@PutMapping("/review/{id}/like")
-	public ResponseEntity<String> likeReview(@PathVariable(name = "id") Long id, HttpSession httpSession) {
+	public ResponseEntity<String> likeReview(@PathVariable(name = "id") UUID id, HttpSession httpSession) {
 
 		String email = (String)httpSession.getAttribute("email");
 		Member member = memberService.findByEmail("dd@test.com");

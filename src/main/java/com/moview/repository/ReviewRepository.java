@@ -2,6 +2,7 @@ package com.moview.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
 
@@ -24,7 +25,7 @@ public class ReviewRepository {
 		return review;
 	}
 
-	public Optional<Review> findByIdWithImagesAndTags(Long id) {
+	public Optional<Review> findByIdWithImagesAndTags(UUID id) {
 		return em.createQuery(
 				"select r from Review r left join fetch r.reviewImages left join fetch r.reviewTags where r.id = :id",
 				Review.class

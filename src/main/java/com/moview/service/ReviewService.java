@@ -87,7 +87,7 @@ public class ReviewService {
 		return review;
 	}
 
-	public Review findByIdWithImagesAndTags(Long id) {
+	public Review findByIdWithImagesAndTags(UUID id) {
 		return reviewRepository.findByIdWithImagesAndTags(id)
 			.orElseThrow(() -> new IllegalArgumentException(ErrorMessage.REVIEW_NOT_EXIST));
 	}

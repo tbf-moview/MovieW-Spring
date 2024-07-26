@@ -69,7 +69,7 @@ public class LoginController {
 	public String verifyMember(@RequestParam("token") String token) {
 		String email = jwtTokenUtil.extractUserEmail(token);
 		String nickname = jwtTokenUtil.extractNickname(token);
-		if (memberRegisterService.registerMember(email,nickname)) {
+		if (memberRegisterService.registerMember(email)) {
 			return "Email verified successfully";
 		} else {
 			return "Invalid token or token expired";

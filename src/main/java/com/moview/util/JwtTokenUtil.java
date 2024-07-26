@@ -30,12 +30,10 @@ public class JwtTokenUtil {
 		secretKey = "wKiLdOXjE24YA3h8ETn1p19EnXRjUBMKDbY0sdw/jjA=";
 	}
 
-	private long accessTokenValidityInMilliseconds = 3600000; // 1시간 (액세스 토큰 유효 기간)
-	private long refreshTokenValidityInMilliseconds = 604800000; // 7일 (리프레시 토큰 유효 기간)
+	private static final long accessTokenValidityInMilliseconds = 3600000; // 1시간 (액세스 토큰 유효 기간)
+	private static final long refreshTokenValidityInMilliseconds = 604800000; // 7일 (리프레시 토큰 유효 기간)
 
 	public String generateRegistrationToken(String email,String nickname) {
-		Map<String, Object> additionalClaims = new HashMap<>();
-		additionalClaims.put("nickname", nickname);
 		return Jwts.builder()
 			.setSubject(email)
 			.setIssuedAt(new Date())

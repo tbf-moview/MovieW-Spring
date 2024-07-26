@@ -21,9 +21,13 @@ public class MemberRegisterService {
 	private final MemberRepository memberRepository;
 	private final JavaMailSender emailSender;
 
+
 	@Transactional
-	public boolean registerMember(String email,String nickname) {
-		Member member = new Member(email);
+	public boolean registerMember(String email) {
+
+		String nickname = substringEmail(email);
+		Member member = new Member(email,nickname);
+
 		String jwtToken = jwtTokenUtil.generateRegistrationToken(email,nickname);
 
 		sendVerificationEmail(member,jwtToken);
@@ -48,15 +52,24 @@ public class MemberRegisterService {
 		if (jwtTokenUtil.validateToken(token)) {
 			String email = jwtTokenUtil.extractUserEmail(token);
 			Member member = memberRepository.findByEmail(email).get();
-			if (member != null) {
-				memberRepository.save(member);
-				return true;
-			}
+			memberRepository.save(member);
+			return true;
 		}
 		return false;
 	}
 
 	private MemberRegisterService getSelf() {
 		return applicationContext.getBean(MemberRegisterService.class);
+	}
+
+	private String substringEmail(String email){
+		int atIndex = email.indexOf('@');
+
+		if (atIndex != -1) { // 골뱅이가 문자열에 존재하는지 확인
+			// 골뱅이 앞까지의 문자열 추출
+			String username = email.substring(0, atIndex);
+			return username;
+		}
+		return null;
 	}
 }

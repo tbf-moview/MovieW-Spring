@@ -1,7 +1,9 @@
 package com.moview.service;
 
 import java.util.Optional;
+import java.util.UUID;
 
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
 import com.moview.common.ErrorMessage;

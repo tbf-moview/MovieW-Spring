@@ -33,6 +33,16 @@ public class JwtTokenUtil {
 	private long accessTokenValidityInMilliseconds = 3600000; // 1시간 (액세스 토큰 유효 기간)
 	private long refreshTokenValidityInMilliseconds = 604800000; // 7일 (리프레시 토큰 유효 기간)
 
+	public String generateRegistrationToken(String email,String nickname) {
+		Map<String, Object> additionalClaims = new HashMap<>();
+		additionalClaims.put("nickname", nickname);
+		return Jwts.builder()
+			.setSubject(email)
+			.setIssuedAt(new Date())
+			.setExpiration(new Date(System.currentTimeMillis() + 3600000))
+			.signWith(SignatureAlgorithm.HS512, secretKey)
+			.compact();
+	}
 
 	public String generateAccessToken(String email,String nickname) {
 		Map<String, Object> additionalClaims = new HashMap<>();

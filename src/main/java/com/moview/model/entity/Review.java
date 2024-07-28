@@ -8,14 +8,11 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
-import org.hibernate.annotations.UuidGenerator;
-
 import com.moview.common.ErrorMessage;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -95,8 +92,15 @@ public class Review {
 		this.reviewImages.addAll(reviewImages);
 	}
 
+	public void deleteReviewImages(List<ReviewImage> reviewImages) {
+		reviewImages.forEach(this.reviewImages::remove);
+	}
+
 	public void addReviewTags(Set<ReviewTag> reviewTags) {
 		this.reviewTags.addAll(reviewTags);
 	}
 
+	public void deleteReviewTags(Set<ReviewTag> reviewTags) {
+		this.reviewTags.removeAll(reviewTags);
+	}
 }

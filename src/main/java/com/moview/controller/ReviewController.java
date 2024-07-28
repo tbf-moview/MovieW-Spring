@@ -27,11 +27,10 @@ import com.moview.model.entity.ReviewImage;
 import com.moview.model.entity.ReviewPreference;
 import com.moview.model.vo.ImageVO;
 import com.moview.service.MemberService;
-import com.moview.service.ReviewImageService;
 import com.moview.service.ReviewPreferenceService;
 import com.moview.service.ReviewService;
-import com.moview.service.ReviewTagService;
 import com.moview.service.S3Service;
+import com.moview.util.FileManager;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -43,12 +42,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ReviewController {
 
-	private static final String DIR_NAME = "review-images/";
+	public static final String DIR_NAME = "review-images/";
 
-	private final ReviewImageService reviewImageService;
 	private final ReviewService reviewService;
 	private final MemberService memberService;
-	private final ReviewTagService reviewTagService;
 	private final ReviewPreferenceService reviewPreferenceService;
 	private final S3Service s3Service;
 
@@ -111,21 +108,41 @@ public class ReviewController {
 	public ResponseEntity<String> updateReview(@PathVariable(name = "id") UUID id,
 		@Validated @ModelAttribute ReviewRequestDTO reviewRequestDTO) {
 
-		Review findReview = reviewService.findByIdWithImagesAndTags(id);
-		// reviewImageService.deleteAllAtS3AndDB(findReview.getReviewImages());
-		reviewTagService.deleteAll(findReview.getReviewTags());
+		Member member = memberService.findByEmail("ee@test.com");
+		Review review = reviewService.findByIdWithImagesAndTags(id);
 
-		List<ImageVO> imageVOs = s3Service.uploadAll(
-			Optional.ofNullable(reviewRequestDTO.getImages()), DIR_NAME, String.valueOf(findReview.getId()));
+		List<String> extractFileNames = FileManager.extractImageFileNameInContent(reviewRequestDTO.getTexts());
+		List<String> originalFileNames = review.getReviewImages()
+			.stream()
+			.map(ReviewImage::getFileName)
+			.toList();
 
-		List<ReviewImage> reviewImages = reviewImageService.saveAll(findReview, imageVOs);
-		findReview = reviewService.update(
-			findReview,
-			reviewRequestDTO.getTitle(),
-			reviewRequestDTO.getTexts(),
-			reviewImages);
+		List<String> deletedFiles = new ArrayList<>();
+		List<ImageVO> imageVOs = new ArrayList<>();
+		try {
 
-		reviewTagService.saveAll(findReview, Optional.ofNullable(reviewRequestDTO.getTags()));
+			for (String originalFileName : originalFileNames) {
+
+				if (!extractFileNames.contains(originalFileName)) {
+					s3Service.delete(originalFileName, DIR_NAME);
+					deletedFiles.add(originalFileName);
+				}
+			}
+
+			imageVOs = s3Service.uploadAll(
+				Optional.ofNullable(reviewRequestDTO.getImages()), DIR_NAME, id.toString());
+
+			Review updateReview = reviewService.update(id, imageVOs, reviewRequestDTO, deletedFiles);
+			log.info("updateReview : {}", updateReview);
+
+		} catch (Exception e) {
+
+			log.error("error : {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
+			deletedFiles.forEach(deletedFile -> s3Service.rollBack(deletedFile, DIR_NAME));
+			imageVOs.forEach(imageVO -> s3Service.delete(imageVO.fileName(), DIR_NAME));
+
+			throw new RuntimeException(e);
+		}
 
 		return ResponseEntity.status(HttpStatus.OK).body("수정 완료");
 	}
@@ -145,9 +162,7 @@ public class ReviewController {
 				deletedFileNames.add(deletedFileName);
 			}
 
-			throw new Exception("testException");
-
-			// reviewService.delete(findReview);
+			reviewService.delete(findReview);
 
 		} catch (Exception e) {
 
@@ -160,7 +175,7 @@ public class ReviewController {
 			throw new RuntimeException(e);
 		}
 
-		// return ResponseEntity.status(HttpStatus.OK).body("delete complete");
+		return ResponseEntity.status(HttpStatus.OK).body("delete complete");
 	}
 
 	@PutMapping("/review/{id}/like")

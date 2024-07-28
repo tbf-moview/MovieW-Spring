@@ -81,12 +81,6 @@ public class ReviewService {
 		return stringBuilder.append(texts.getLast()).toString();
 	}
 
-	public Review update(Review review, String title, List<String> texts, List<ReviewImage> reviewImages) {
-		String content = makeContent(texts, reviewImages);
-		review.updateContent(content);
-		return review;
-	}
-
 	public Review findByIdWithImagesAndTags(UUID id) {
 		return reviewRepository.findByIdWithImagesAndTags(id)
 			.orElseThrow(() -> new IllegalArgumentException(ErrorMessage.REVIEW_NOT_EXIST));
@@ -98,6 +92,58 @@ public class ReviewService {
 
 	public List<ReviewListResponseDTO> findAllWithLikeCount(int pageNumber) {
 		return reviewRepository.findAllWithLikeCount(pageNumber, PAGE_SIZE);
+	}
+
+	public Review update(UUID reviewID, Member member, List<ImageVO> imageVOs, ReviewRequestDTO reviewRequestDTO,
+		List<String> deleteFilenames) {
+
+		Optional<Review> optionalReview = reviewRepository.findByIdWithImagesAndTags(reviewID);
+
+		Review review = optionalReview.orElseThrow(() -> new IllegalArgumentException(ErrorMessage.REVIEW_NOT_EXIST));
+
+		if(!review.getMember().equals(member)) {
+			throw new IllegalArgumentException("[ERROR] 작성 권한이 없는 회원입니다.]");
+		}
+
+		updateReviewImages(review, deleteFilenames, imageVOs);
+		updateReviewTags(review, reviewRequestDTO.getTags());
+
+		return review;
+
+	}
+
+	private void updateReviewImages(Review review, List<String> deleteFileNames,
+		List<ImageVO> imageVOs) {
+
+		Set<ReviewImage> originalImages = review.getReviewImages();
+		List<ReviewImage> reviewImages = makeReviewImages(review, Optional.ofNullable(imageVOs));
+
+		List<ReviewImage> deleteReviewImages = originalImages.stream()
+			.filter(originalImage -> deleteFileNames.contains(originalImage.getFileName()))
+			.toList();
+
+		review.deleteReviewImages(deleteReviewImages);
+		review.addReviewImages(reviewImages);
+
+	}
+
+	private void updateReviewTags(Review review, List<String> tags) {
+
+		Set<ReviewTag> originalReviewTags = review.getReviewTags();
+		Set<ReviewTag> newReviewTags = tags.stream()
+			.map(tag -> ReviewTag.of(review, tag))
+			.collect(Collectors.toSet());
+
+		Set<ReviewTag> deleteTags = originalReviewTags.stream()
+			.filter(originalTag -> !newReviewTags.contains(originalTag))
+			.collect(Collectors.toSet());
+
+		Set<ReviewTag> addTags = newReviewTags.stream()
+			.filter(newTag -> !originalReviewTags.contains(newTag))
+			.collect(Collectors.toSet());
+
+		review.deleteReviewTags(deleteTags);
+		review.addReviewTags(addTags);
 	}
 
 }

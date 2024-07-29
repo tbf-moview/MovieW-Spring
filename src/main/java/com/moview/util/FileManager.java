@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,6 +30,7 @@ public class FileManager {
 
 		String uploadFilename =
 			prefixName + FILE_NAME_DELIMITER
+				+ UUID.randomUUID() + FILE_NAME_DELIMITER
 				+ Objects.requireNonNull(originalFilename).replaceAll(SPACE, FILE_NAME_DELIMITER);
 
 		File uploadFile = new File(uploadFilename);

@@ -1,5 +1,7 @@
 package com.moview.model.entity;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.Column;
@@ -47,6 +49,26 @@ public class ReviewImage {
 	@Override
 	public String toString() {
 		return "ReviewImage (id=" + id + ", fileName=" + fileName + ", fileUrl=" + fileUrl + ")";
+	}
+
+	@Override
+	public boolean equals(Object o) {
+
+		if (this == o) {
+			return true;
+		}
+
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+
+		ReviewImage that = (ReviewImage)o;
+		return Objects.equals(review, that.review) && Objects.equals(fileName, that.fileName);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(review, fileName);
 	}
 
 }

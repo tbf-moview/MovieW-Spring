@@ -73,10 +73,22 @@ public class Review {
 		return new Review(id, member, title, DEFAULT_CONTENT, now, now);
 	}
 
+	public void updateTitle(String title) {
+
+		validateEmptyTitle(title);
+		this.title = title;
+	}
+
+	private void validateEmptyTitle(String title) {
+
+		if (Objects.isNull(title) || title.isEmpty()) {
+			throw new IllegalStateException(ErrorMessage.TITLE_EMPTY);
+		}
+	}
+
 	public void updateContent(String content) {
 
 		validateEmptyContent(content);
-
 		this.content = content;
 		this.updateDate = Timestamp.from(Instant.now());
 	}
@@ -102,5 +114,25 @@ public class Review {
 
 	public void deleteReviewTags(Set<ReviewTag> reviewTags) {
 		this.reviewTags.removeAll(reviewTags);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+
+		if (this == o) {
+			return true;
+		}
+
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+
+		Review that = (Review)o;
+		return Objects.equals(id, that.id);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(id);
 	}
 }

@@ -96,7 +96,11 @@ public class ReviewController {
 	@DeleteMapping("/review/{id}")
 	public ResponseEntity<String> deleteReview(@PathVariable(name = "id") UUID id) {
 
-		reviewService.delete(id);
+		Review findReview = reviewService.findByIdWithImagesAndTags(id);
+
+		reviewService.delete(findReview);
+		reviewPreferenceService.deleteAll(findReview);
+
 		return ResponseEntity.status(HttpStatus.OK).body("delete complete");
 	}
 

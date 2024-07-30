@@ -63,9 +63,7 @@ public class ReviewService {
 		return reviewRepository.findAllWithLikeCount(pageNumber, PAGE_SIZE);
 	}
 
-	public void delete(UUID reviewID) {
-
-		Review findReview = findByIdWithImagesAndTags(reviewID);
+	public void delete(Review findReview) {
 
 		List<String> deletedFileNames = new ArrayList<>();
 

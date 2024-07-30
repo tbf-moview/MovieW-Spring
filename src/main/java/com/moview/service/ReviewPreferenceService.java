@@ -14,12 +14,12 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class ReviewPreferenceService {
 
 	private final ReviewPreferenceRepository reviewPreferenceRepository;
 
+	@Transactional
 	public ReviewPreference changePreference(Member member, Review review) {
 
 		Optional<ReviewPreference> optionalPreference = reviewPreferenceRepository.findByMemberAndReview(member, review);
@@ -42,9 +42,10 @@ public class ReviewPreferenceService {
 		return reviewPreferenceRepository.findByMemberAndReview(member, review).orElseGet(ReviewPreference::new);
 	}
 
+	@Transactional
 	public void deleteAll(Review review) {
 
-		List<ReviewPreference> reviewPreferences = reviewPreferenceRepository.findAllByReview(review);
+		List<ReviewPreference> reviewPreferences = reviewPreferenceRepository.findAll(review);
 
 		if(reviewPreferences.isEmpty()) {
 			return;

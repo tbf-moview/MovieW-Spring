@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 public class S3Service {
 
 	private static final String DELETE_DIR_NAME = "delete/";
+	private static final String BLANK_FILE_NAME = "";
 
 	private final AmazonS3 amazonS3;
 	private final String bucket;
@@ -51,6 +52,11 @@ public class S3Service {
 
 		String url = amazonS3.getUrl(bucket, uploadFilename).toString();
 		return new ImageVO(uploadFilename, url);
+	}
+
+	private void uploadToS3(File file, String fileName) {
+		amazonS3.putObject(new PutObjectRequest(bucket, fileName, file)
+			.withCannedAcl(CannedAccessControlList.PublicRead));
 	}
 
 	public List<ImageVO> uploadAll(Optional<List<MultipartFile>> optionalMultipartFiles, String dirName,
@@ -83,13 +89,11 @@ public class S3Service {
 		return images;
 	}
 
-	private void uploadToS3(File file, String fileName) {
-
-		amazonS3.putObject(new PutObjectRequest(bucket, fileName, file)
-			.withCannedAcl(CannedAccessControlList.PublicRead));
-	}
-
 	public String delete(String fileName, String originalDirName) {
+
+		if (!amazonS3.doesObjectExist(bucket, originalDirName)) {
+			return BLANK_FILE_NAME;
+		}
 
 		String deleteFileName = DELETE_DIR_NAME + fileName.substring(originalDirName.length());
 
@@ -101,6 +105,10 @@ public class S3Service {
 	}
 
 	public void rollBack(String deletedFileName, String originalDirName) {
+
+		if (deletedFileName.isEmpty()) {
+			return;
+		}
 
 		String rollBackFileName = originalDirName + deletedFileName.substring(DELETE_DIR_NAME.length());
 

@@ -26,7 +26,7 @@ public class ReviewTag {
 	private long id;
 
 	@ManyToOne
-	@JoinColumn(name = "review_id")
+	@JoinColumn(name = "review_id", nullable = false)
 	@JsonBackReference
 	private Review review;
 
@@ -59,7 +59,8 @@ public class ReviewTag {
 		}
 
 		ReviewTag that = (ReviewTag)o;
-		return review.equals(that.review) && tag.equals(that.tag);
+		return Objects.equals(review, that.review)
+				&& Objects.equals(tag, that.tag);
 	}
 
 	@Override

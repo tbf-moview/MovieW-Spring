@@ -53,10 +53,12 @@ public class Review {
 	@Column(name = "update_date")
 	private Timestamp updateDate;
 
-	@OneToMany(mappedBy = "review", cascade = {CascadeType.PERSIST, CascadeType.REMOVE, CascadeType.MERGE})
+	@OneToMany(mappedBy = "review", cascade = {CascadeType.PERSIST, CascadeType.REMOVE, CascadeType.MERGE},
+		orphanRemoval = true)
 	private Set<ReviewImage> reviewImages = new LinkedHashSet<>();
 
-	@OneToMany(mappedBy = "review", cascade = {CascadeType.PERSIST, CascadeType.REMOVE, CascadeType.MERGE})
+	@OneToMany(mappedBy = "review", cascade = {CascadeType.PERSIST, CascadeType.REMOVE, CascadeType.MERGE},
+		orphanRemoval = true)
 	private Set<ReviewTag> reviewTags = new LinkedHashSet<>();
 
 	private Review(UUID id, Member member, String title, String content, Timestamp createDate, Timestamp updateDate) {
@@ -113,7 +115,7 @@ public class Review {
 	}
 
 	public void deleteReviewTags(Set<ReviewTag> reviewTags) {
-		this.reviewTags.removeAll(reviewTags);
+		reviewTags.forEach(reviewTag -> this.reviewTags.remove(reviewTag));
 	}
 
 	@Override

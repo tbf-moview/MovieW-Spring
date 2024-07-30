@@ -21,7 +21,7 @@ public class FileManager {
 	private static final String SPACE = "\\s";
 
 	private static final String START_IMAGE_TAG = "<img src=\"";
-	private static final String END_IMAGE_TAG = "\"/>";
+	private static final String END_IMAGE_TAG = "\">";
 	private static final String HOST_NAME = "https://tbf-moview-test.s3.ap-northeast-2.amazonaws.com/";
 
 	public static File convertFile(MultipartFile originalFile, String prefixName) throws IOException {

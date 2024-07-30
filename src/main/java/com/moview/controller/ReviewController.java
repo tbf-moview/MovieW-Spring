@@ -1,9 +1,6 @@
 package com.moview.controller;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -23,14 +20,10 @@ import com.moview.model.dto.response.ReviewListResponseDTO;
 import com.moview.model.dto.response.ReviewResponseDTO;
 import com.moview.model.entity.Member;
 import com.moview.model.entity.Review;
-import com.moview.model.entity.ReviewImage;
 import com.moview.model.entity.ReviewPreference;
-import com.moview.model.vo.ImageVO;
 import com.moview.service.MemberService;
 import com.moview.service.ReviewPreferenceService;
 import com.moview.service.ReviewService;
-import com.moview.service.S3Service;
-import com.moview.util.FileManager;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -42,12 +35,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ReviewController {
 
-	public static final String DIR_NAME = "review-images/";
-
 	private final ReviewService reviewService;
 	private final MemberService memberService;
 	private final ReviewPreferenceService reviewPreferenceService;
-	private final S3Service s3Service;
 
 	@PostMapping("/review")
 	public ResponseEntity<String> createReview(@Validated @ModelAttribute ReviewRequestDTO reviewRequestDTO,
@@ -58,21 +48,8 @@ public class ReviewController {
 		String email = (String)httpSession.getAttribute("email");
 		Member member = memberService.findByEmail("ee@test.com");
 
-		List<ImageVO> imageVOs = new ArrayList<>();
-
-		try {
-			UUID reviewID = UUID.randomUUID();
-
-			imageVOs = s3Service.uploadAll(
-				Optional.ofNullable(reviewRequestDTO.getImages()), DIR_NAME, reviewID.toString());
-
-			Review review = reviewService.save(reviewID, member, imageVOs, reviewRequestDTO);
-			log.info("review : {}", review);
-
-		} catch (Exception e) {
-			imageVOs.forEach(imageVO -> s3Service.delete(imageVO.fileName(), DIR_NAME));
-			throw new RuntimeException(e);
-		}
+		Review saveReview = reviewService.save(member, reviewRequestDTO);
+		log.info("saveReview : {}", saveReview);
 
 		return ResponseEntity.status(HttpStatus.CREATED).body("create complete");
 	}
@@ -109,72 +86,17 @@ public class ReviewController {
 		@Validated @ModelAttribute ReviewRequestDTO reviewRequestDTO) {
 
 		Member member = memberService.findByEmail("ee@test.com");
-		Review review = reviewService.findByIdWithImagesAndTags(id);
 
-		List<String> extractFileNames = FileManager.extractImageFileNameInContent(reviewRequestDTO.getTexts());
-		List<String> originalFileNames = review.getReviewImages()
-			.stream()
-			.map(ReviewImage::getFileName)
-			.toList();
+		Review updateReview = reviewService.update(id, member, reviewRequestDTO);
+		log.info("updateReview : {}", updateReview);
 
-		List<String> deletedFiles = new ArrayList<>();
-		List<ImageVO> imageVOs = new ArrayList<>();
-		try {
-
-			for (String originalFileName : originalFileNames) {
-
-				if (!extractFileNames.contains(originalFileName)) {
-					s3Service.delete(originalFileName, DIR_NAME);
-					deletedFiles.add(originalFileName);
-				}
-			}
-
-			imageVOs = s3Service.uploadAll(
-				Optional.ofNullable(reviewRequestDTO.getImages()), DIR_NAME, id.toString());
-
-			Review updateReview = reviewService.update(id, imageVOs, reviewRequestDTO, deletedFiles);
-			log.info("updateReview : {}", updateReview);
-
-		} catch (Exception e) {
-
-			log.error("error : {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
-			deletedFiles.forEach(deletedFile -> s3Service.rollBack(deletedFile, DIR_NAME));
-			imageVOs.forEach(imageVO -> s3Service.delete(imageVO.fileName(), DIR_NAME));
-
-			throw new RuntimeException(e);
-		}
-
-		return ResponseEntity.status(HttpStatus.OK).body("수정 완료");
+		return ResponseEntity.status(HttpStatus.OK).body("update complete");
 	}
 
 	@DeleteMapping("/review/{id}")
 	public ResponseEntity<String> deleteReview(@PathVariable(name = "id") UUID id) {
 
-		Review findReview = reviewService.findByIdWithImagesAndTags(id);
-
-		List<String> deletedFileNames = new ArrayList<>();
-
-		try {
-			Set<ReviewImage> reviewImages = findReview.getReviewImages();
-
-			for (ReviewImage reviewImage : reviewImages) {
-				String deletedFileName = s3Service.delete(reviewImage.getFileName(), DIR_NAME);
-				deletedFileNames.add(deletedFileName);
-			}
-
-			reviewService.delete(findReview);
-
-		} catch (Exception e) {
-
-			log.error("error : {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
-
-			for (String deletedFileName : deletedFileNames) {
-				s3Service.rollBack(deletedFileName, DIR_NAME);
-			}
-
-			throw new RuntimeException(e);
-		}
-
+		reviewService.delete(id);
 		return ResponseEntity.status(HttpStatus.OK).body("delete complete");
 	}
 
@@ -192,7 +114,7 @@ public class ReviewController {
 	}
 
 	@GetMapping("/reviews/{page}")
-	public ResponseEntity<?> findAllReviews(@PathVariable(name = "page") int page) {
+	public ResponseEntity<List<ReviewListResponseDTO>> findAllReviews(@PathVariable(name = "page") int page) {
 
 		List<ReviewListResponseDTO> reviewListResponseDTOS = reviewService.findAllWithLikeCount(page);
 

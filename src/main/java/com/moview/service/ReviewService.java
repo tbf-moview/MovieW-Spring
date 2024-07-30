@@ -1,12 +1,10 @@
 package com.moview.service;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -16,69 +14,44 @@ import com.moview.model.dto.response.ReviewListResponseDTO;
 import com.moview.model.entity.Member;
 import com.moview.model.entity.Review;
 import com.moview.model.entity.ReviewImage;
-import com.moview.model.entity.ReviewTag;
 import com.moview.model.vo.ImageVO;
 import com.moview.repository.ReviewRepository;
+import com.moview.util.FileManager;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
 public class ReviewService {
 
+	public static final String DIR_NAME = "review-images/";
 	private static final int PAGE_SIZE = 20;
-	private static final String START_IMAGE_TAG = "<img src=\"";
-	private static final String END_IMAGE_TAG = "\"/>";
 
 	private final ReviewRepository reviewRepository;
+	private final ReviewTransactionService reviewTransactionService;
+	private final S3Service s3Service;
 
-	public Review save(UUID reviewID, Member member, List<ImageVO> imageVOs,
-		ReviewRequestDTO reviewRequestDTO) {
+	public Review save(Member member, ReviewRequestDTO reviewRequestDTO) {
 
-		Review review = Review.of(reviewID, member, reviewRequestDTO.getTitle());
+		List<ImageVO> imageVOs = new ArrayList<>();
 
-		List<ReviewImage> reviewImages = makeReviewImages(review, Optional.ofNullable(imageVOs));
-		Set<ReviewTag> reviewTags = makeReviewTags(review, Optional.ofNullable(reviewRequestDTO.getTags()));
+		try {
+			UUID reviewID = UUID.randomUUID();
 
-		String content = makeContent(reviewRequestDTO.getTexts(), reviewImages);
-		review.updateContent(content);
+			imageVOs = s3Service.uploadAll(
+				Optional.ofNullable(reviewRequestDTO.getImages()), DIR_NAME, reviewID.toString());
 
-		review.addReviewImages(reviewImages);
-		review.addReviewTags(reviewTags);
+			Review review = reviewTransactionService.save(reviewID, member, imageVOs, reviewRequestDTO);
+			log.info("review : {}", review);
 
-		return reviewRepository.save(review);
-	}
+			return review;
 
-	private List<ReviewImage> makeReviewImages(Review review, Optional<List<ImageVO>> optionalImageVOs) {
-
-		return optionalImageVOs.map(imageVOS -> imageVOS
-			.stream()
-			.map(imageVO -> ReviewImage.of(review, imageVO.fileName(), imageVO.fileUrl()))
-			.toList()).orElseGet(ArrayList::new);
-
-	}
-
-	private Set<ReviewTag> makeReviewTags(Review review, Optional<List<String>> optionalTags) {
-
-		return optionalTags.map(strings -> strings.stream()
-			.map(tag -> ReviewTag.of(review, tag))
-			.collect(Collectors.toSet())).orElseGet(LinkedHashSet::new);
-
-	}
-
-	public String makeContent(List<String> texts, List<ReviewImage> reviewImages) {
-		StringBuilder stringBuilder = new StringBuilder();
-
-		for (int i = 0; i < reviewImages.size(); i++) {
-			stringBuilder.append(texts.get(i));
-			stringBuilder.append(START_IMAGE_TAG).append(reviewImages.get(i).getFileUrl()).append(END_IMAGE_TAG);
+		} catch (Exception e) {
+			imageVOs.forEach(imageVO -> s3Service.delete(imageVO.fileName(), DIR_NAME));
+			throw new RuntimeException(e);
 		}
-
-		return stringBuilder.append(texts.getLast()).toString();
 	}
 
 	public Review findByIdWithImagesAndTags(UUID id) {
@@ -86,64 +59,80 @@ public class ReviewService {
 			.orElseThrow(() -> new IllegalArgumentException(ErrorMessage.REVIEW_NOT_EXIST));
 	}
 
-	public void delete(Review review) {
-		reviewRepository.delete(review);
-	}
-
 	public List<ReviewListResponseDTO> findAllWithLikeCount(int pageNumber) {
 		return reviewRepository.findAllWithLikeCount(pageNumber, PAGE_SIZE);
 	}
 
-	public Review update(UUID reviewID, Member member, List<ImageVO> imageVOs, ReviewRequestDTO reviewRequestDTO,
-		List<String> deleteFilenames) {
+	public void delete(UUID reviewID) {
 
-		Optional<Review> optionalReview = reviewRepository.findByIdWithImagesAndTags(reviewID);
+		Review findReview = findByIdWithImagesAndTags(reviewID);
 
-		Review review = optionalReview.orElseThrow(() -> new IllegalArgumentException(ErrorMessage.REVIEW_NOT_EXIST));
+		List<String> deletedFileNames = new ArrayList<>();
 
-		if(!review.getMember().equals(member)) {
-			throw new IllegalArgumentException("[ERROR] 작성 권한이 없는 회원입니다.]");
+		try {
+
+			reviewTransactionService.delete(findReview);
+
+			Set<ReviewImage> reviewImages = findReview.getReviewImages();
+
+			for (ReviewImage reviewImage : reviewImages) {
+				String deletedFileName = s3Service.delete(reviewImage.getFileName(), DIR_NAME);
+				deletedFileNames.add(deletedFileName);
+			}
+
+		} catch (Exception e) {
+
+			log.error("error : {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
+
+			for (String deletedFileName : deletedFileNames) {
+				s3Service.rollBack(deletedFileName, DIR_NAME);
+			}
+
+			throw new RuntimeException(e);
 		}
-
-		updateReviewImages(review, deleteFilenames, imageVOs);
-		updateReviewTags(review, reviewRequestDTO.getTags());
-
-		return review;
-
 	}
 
-	private void updateReviewImages(Review review, List<String> deleteFileNames,
-		List<ImageVO> imageVOs) {
+	public Review update(UUID reviewID, Member member, ReviewRequestDTO reviewRequestDTO) {
 
-		Set<ReviewImage> originalImages = review.getReviewImages();
-		List<ReviewImage> reviewImages = makeReviewImages(review, Optional.ofNullable(imageVOs));
+		Review review = findByIdWithImagesAndTags(reviewID);
 
-		List<ReviewImage> deleteReviewImages = originalImages.stream()
-			.filter(originalImage -> deleteFileNames.contains(originalImage.getFileName()))
+		List<String> extractFileNames = FileManager.extractImageFileNameInContent(reviewRequestDTO.getTexts());
+		List<String> originalFileNames = review.getReviewImages()
+			.stream()
+			.map(ReviewImage::getFileName)
 			.toList();
 
-		review.deleteReviewImages(deleteReviewImages);
-		review.addReviewImages(reviewImages);
+		List<String> deletedFiles = new ArrayList<>();
+		List<ImageVO> imageVOs = new ArrayList<>();
 
-	}
+		try {
 
-	private void updateReviewTags(Review review, List<String> tags) {
+			for (String originalFileName : originalFileNames) {
 
-		Set<ReviewTag> originalReviewTags = review.getReviewTags();
-		Set<ReviewTag> newReviewTags = tags.stream()
-			.map(tag -> ReviewTag.of(review, tag))
-			.collect(Collectors.toSet());
+				if (!extractFileNames.contains(originalFileName)) {
+					s3Service.delete(originalFileName, DIR_NAME);
+					deletedFiles.add(originalFileName);
+				}
+			}
 
-		Set<ReviewTag> deleteTags = originalReviewTags.stream()
-			.filter(originalTag -> !newReviewTags.contains(originalTag))
-			.collect(Collectors.toSet());
+			imageVOs = s3Service.uploadAll(
+				Optional.ofNullable(reviewRequestDTO.getImages()), DIR_NAME, review.getId().toString());
 
-		Set<ReviewTag> addTags = newReviewTags.stream()
-			.filter(newTag -> !originalReviewTags.contains(newTag))
-			.collect(Collectors.toSet());
+			Review updateReview = reviewTransactionService.update(review.getId(), member, imageVOs, reviewRequestDTO,
+				deletedFiles);
+			log.info("updateReview : {}", updateReview);
 
-		review.deleteReviewTags(deleteTags);
-		review.addReviewTags(addTags);
+			return updateReview;
+
+		} catch (Exception e) {
+
+			log.error("error : {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
+			deletedFiles.forEach(deletedFile -> s3Service.rollBack(deletedFile, DIR_NAME));
+			imageVOs.forEach(imageVO -> s3Service.delete(imageVO.fileName(), DIR_NAME));
+
+			throw new RuntimeException(e);
+		}
+
 	}
 
 }

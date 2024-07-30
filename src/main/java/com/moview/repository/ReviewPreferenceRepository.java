@@ -34,13 +34,13 @@ public class ReviewPreferenceRepository {
 	}
 
 	public long countByReview(Review review) {
-		return (long)em.createQuery(
-				"select count(p) as like_count from ReviewPreference p where p.review = :review and likeSign = true")
+		return em.createQuery(
+				"select count(p) as like_count from ReviewPreference p where p.review = :review and p.likeSign = TRUE", Long.class)
 			.setParameter("review", review)
 			.getSingleResult();
 	}
 
-	public List<ReviewPreference> findAllByReview(Review review) {
+	public List<ReviewPreference> findAll(Review review) {
 
 		return em.createQuery("select p from ReviewPreference p where p.review = :review", ReviewPreference.class)
 			.setParameter("review", review)

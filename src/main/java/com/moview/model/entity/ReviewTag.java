@@ -42,6 +42,10 @@ public class ReviewTag {
 		return new ReviewTag(review, tag);
 	}
 
+	void dissociateReview() {
+		this.review = null;
+	}
+
 	@Override
 	public String toString() {
 		return "ReviewTag (id=" + id + ", tag=" + tag + ")";
@@ -60,7 +64,7 @@ public class ReviewTag {
 
 		ReviewTag that = (ReviewTag)o;
 		return Objects.equals(review, that.review)
-				&& Objects.equals(tag, that.tag);
+			&& Objects.equals(tag, that.tag);
 	}
 
 	@Override

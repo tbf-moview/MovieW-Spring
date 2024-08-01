@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.PutObjectRequest;
@@ -76,7 +77,7 @@ public class S3Service {
 				images.add(image);
 			}
 
-		} catch (IOException | RuntimeException e) {
+		} catch (IOException | AmazonClientException e) {
 			log.error(e.getMessage());
 
 			for (ImageVO image : images) {
@@ -91,7 +92,7 @@ public class S3Service {
 
 	public String delete(String fileName, String originalDirName) {
 
-		if (!amazonS3.doesObjectExist(bucket, originalDirName)) {
+		if (!amazonS3.doesObjectExist(bucket, fileName)) {
 			return BLANK_FILE_NAME;
 		}
 

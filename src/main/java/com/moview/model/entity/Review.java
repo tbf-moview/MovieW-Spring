@@ -107,7 +107,10 @@ public class Review {
 	}
 
 	public void deleteReviewImages(List<ReviewImage> reviewImages) {
-		reviewImages.forEach(this.reviewImages::remove);
+		reviewImages.forEach(reviewImage -> {
+			this.reviewImages.remove(reviewImage);
+			reviewImage.dissociateReview();
+		});
 	}
 
 	public void addReviewTags(Set<ReviewTag> reviewTags) {
@@ -115,7 +118,10 @@ public class Review {
 	}
 
 	public void deleteReviewTags(Set<ReviewTag> reviewTags) {
-		reviewTags.forEach(reviewTag -> this.reviewTags.remove(reviewTag));
+		reviewTags.forEach(reviewTag -> {
+			this.reviewTags.remove(reviewTag);
+			reviewTag.dissociateReview();
+		});
 	}
 
 	@Override

@@ -46,6 +46,10 @@ public class ReviewImage {
 		return new ReviewImage(review, fileName, fileURL);
 	}
 
+	void dissociateReview() {
+		this.review = null;
+	}
+
 	@Override
 	public String toString() {
 		return "ReviewImage (id=" + id + ", fileName=" + fileName + ", fileUrl=" + fileUrl + ")";

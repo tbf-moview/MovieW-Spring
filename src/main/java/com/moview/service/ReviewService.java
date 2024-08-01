@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import com.amazonaws.AmazonClientException;
 import com.moview.common.ErrorMessage;
 import com.moview.model.dto.request.ReviewRequestDTO;
 import com.moview.model.dto.response.ReviewListResponseDTO;
@@ -48,9 +49,13 @@ public class ReviewService {
 
 			return review;
 
-		} catch (Exception e) {
+		} catch (AmazonClientException amazonClientException) {
 			imageVOs.forEach(imageVO -> s3Service.delete(imageVO.fileName(), DIR_NAME));
-			throw new RuntimeException(e);
+			throw new AmazonClientException(amazonClientException.getMessage(), amazonClientException);
+
+		} catch (RuntimeException runtimeException) {
+			imageVOs.forEach(imageVO -> s3Service.delete(imageVO.fileName(), DIR_NAME));
+			throw new RuntimeException(runtimeException.getMessage(), runtimeException);
 		}
 	}
 
@@ -78,15 +83,13 @@ public class ReviewService {
 				deletedFileNames.add(deletedFileName);
 			}
 
-		} catch (Exception e) {
-
-			log.error("error : {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
+		} catch (AmazonClientException amazonClientException) {
 
 			for (String deletedFileName : deletedFileNames) {
 				s3Service.rollBack(deletedFileName, DIR_NAME);
 			}
 
-			throw new RuntimeException(e);
+			throw new AmazonClientException(amazonClientException.getMessage(), amazonClientException);
 		}
 	}
 
@@ -122,13 +125,12 @@ public class ReviewService {
 
 			return updateReview;
 
-		} catch (Exception e) {
+		} catch (AmazonClientException amazonClientException) {
 
-			log.error("error : {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
 			deletedFiles.forEach(deletedFile -> s3Service.rollBack(deletedFile, DIR_NAME));
 			imageVOs.forEach(imageVO -> s3Service.delete(imageVO.fileName(), DIR_NAME));
 
-			throw new RuntimeException(e);
+			throw new RuntimeException(amazonClientException.getMessage(), amazonClientException);
 		}
 
 	}

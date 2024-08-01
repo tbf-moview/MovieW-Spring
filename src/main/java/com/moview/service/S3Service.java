@@ -43,10 +43,6 @@ public class S3Service {
 		try {
 			uploadToS3(uploadFile, uploadFilename);
 
-		} catch (Exception e) {
-			log.error("파일 업로드 중 예외 발생 : {} - {}", e.getClass().getSimpleName(), e.getMessage(), e);
-			throw new RuntimeException(e);
-
 		} finally {
 			FileManager.deleteFile(uploadFile);
 		}
@@ -77,14 +73,21 @@ public class S3Service {
 				images.add(image);
 			}
 
-		} catch (IOException | AmazonClientException e) {
-			log.error(e.getMessage());
+		} catch (AmazonClientException amazonClientException) {
 
 			for (ImageVO image : images) {
 				delete(image.fileName(), dirName);
 			}
 
-			throw new RuntimeException(e);
+			throw new AmazonClientException(amazonClientException);
+
+		} catch (IOException ioException) {
+
+			for (ImageVO image : images) {
+				delete(image.fileName(), dirName);
+			}
+
+			throw new RuntimeException(ioException.getMessage(), ioException);
 		}
 
 		return images;

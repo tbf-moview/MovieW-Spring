@@ -16,7 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.moview.model.dto.request.ReviewRequestDTO;
-import com.moview.model.dto.response.ReviewListResponseDTO;
+import com.moview.model.dto.request.ReviewSearchRequestDTO;
+import com.moview.model.dto.response.ReviewsResponseDTO;
 import com.moview.model.dto.response.ReviewResponseDTO;
 import com.moview.model.entity.Member;
 import com.moview.model.entity.Review;
@@ -114,14 +115,25 @@ public class ReviewController {
 		ReviewPreference reviewPreference = reviewPreferenceService.changePreference(member, review);
 		log.info("reviewPreference : {}", reviewPreference);
 
-		return ResponseEntity.status(HttpStatus.OK).body("좋아요 변경 완료");
+		return ResponseEntity.status(HttpStatus.OK).body("Change Preference");
 	}
 
 	@GetMapping("/reviews/{page}")
-	public ResponseEntity<List<ReviewListResponseDTO>> findAllReviews(@PathVariable(name = "page") int page) {
+	public ResponseEntity<List<ReviewsResponseDTO>> findAllReviews(@PathVariable(name = "page") int page) {
 
-		List<ReviewListResponseDTO> reviewListResponseDTOS = reviewService.findAllWithLikeCount(page);
+		List<ReviewsResponseDTO> reviewsResponseDTOS = reviewService.findAllWithLikeCount(page);
+		return ResponseEntity.status(HttpStatus.OK).body(reviewsResponseDTOS);
+	}
 
-		return ResponseEntity.status(HttpStatus.OK).body(reviewListResponseDTOS);
+	@GetMapping("/reviews")
+	public ResponseEntity<?> findAll(@ModelAttribute ReviewSearchRequestDTO reviewSearchRequestDTO){
+
+		log.info("reviewSearchRequestDTO : {}", reviewSearchRequestDTO);
+
+		List<ReviewsResponseDTO> reviewsResponseDTOS = reviewService.findBySearchWordWithLikeCount(
+			reviewSearchRequestDTO);
+
+		log.info("reviewsResponseDTOs : {}", reviewsResponseDTOS);
+		return ResponseEntity.status(HttpStatus.OK).body(reviewsResponseDTOS);
 	}
 }

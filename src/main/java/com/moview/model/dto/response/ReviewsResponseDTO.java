@@ -14,7 +14,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class ReviewListResponseDTO {
+public class ReviewsResponseDTO {
 
 	private UUID id;
 	private String email;

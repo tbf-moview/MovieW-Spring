@@ -11,7 +11,8 @@ import org.springframework.stereotype.Service;
 import com.amazonaws.AmazonClientException;
 import com.moview.common.ErrorMessage;
 import com.moview.model.dto.request.ReviewRequestDTO;
-import com.moview.model.dto.response.ReviewListResponseDTO;
+import com.moview.model.dto.request.ReviewSearchRequestDTO;
+import com.moview.model.dto.response.ReviewsResponseDTO;
 import com.moview.model.entity.Member;
 import com.moview.model.entity.Review;
 import com.moview.model.entity.ReviewImage;
@@ -64,8 +65,12 @@ public class ReviewService {
 			.orElseThrow(() -> new IllegalArgumentException(ErrorMessage.REVIEW_NOT_EXIST));
 	}
 
-	public List<ReviewListResponseDTO> findAllWithLikeCount(int pageNumber) {
+	public List<ReviewsResponseDTO> findAllWithLikeCount(int pageNumber) {
 		return reviewRepository.findAllWithLikeCount(pageNumber, PAGE_SIZE);
+	}
+
+	public List<ReviewsResponseDTO> findBySearchWordWithLikeCount(ReviewSearchRequestDTO reviewSearchRequestDTO) {
+		return reviewRepository.findBySearchWordWithLikeCount(reviewSearchRequestDTO, PAGE_SIZE);
 	}
 
 	public void delete(Review findReview) {

@@ -69,8 +69,11 @@ public class ReviewService {
 		return reviewRepository.findAllWithLikeCount(pageNumber, PAGE_SIZE);
 	}
 
-	public List<ReviewsResponseDTO> findBySearchWordWithLikeCount(ReviewSearchRequestDTO reviewSearchRequestDTO) {
-		return reviewRepository.findBySearchWordWithLikeCount(reviewSearchRequestDTO, PAGE_SIZE);
+	public List<ReviewsResponseDTO> search(ReviewSearchRequestDTO reviewSearchRequestDTO) {
+		return reviewRepository.findBySearchWordWithLikeCount(reviewSearchRequestDTO.getSearchOption(),
+			reviewSearchRequestDTO.getSearchWord(),
+			reviewSearchRequestDTO.getPage(),
+			PAGE_SIZE);
 	}
 
 	public void delete(Review findReview) {
@@ -135,7 +138,7 @@ public class ReviewService {
 			deletedFiles.forEach(deletedFile -> s3Service.rollBack(deletedFile, DIR_NAME));
 			imageVOs.forEach(imageVO -> s3Service.delete(imageVO.fileName(), DIR_NAME));
 
-			throw new RuntimeException(amazonClientException.getMessage(), amazonClientException);
+			throw new AmazonClientException(amazonClientException.getMessage(), amazonClientException);
 		}
 
 	}

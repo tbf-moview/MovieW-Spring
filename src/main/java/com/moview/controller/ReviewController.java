@@ -130,7 +130,7 @@ public class ReviewController {
 
 		log.info("reviewSearchRequestDTO : {}", reviewSearchRequestDTO);
 
-		List<ReviewsResponseDTO> reviewsResponseDTOS = reviewService.findBySearchWordWithLikeCount(
+		List<ReviewsResponseDTO> reviewsResponseDTOS = reviewService.search(
 			reviewSearchRequestDTO);
 
 		log.info("reviewsResponseDTOs : {}", reviewsResponseDTOS);

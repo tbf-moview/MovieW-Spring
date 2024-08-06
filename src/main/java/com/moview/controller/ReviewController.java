@@ -13,12 +13,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.moview.model.dto.request.ReviewRequestDTO;
 import com.moview.model.dto.request.ReviewSearchRequestDTO;
-import com.moview.model.dto.response.ReviewsResponseDTO;
 import com.moview.model.dto.response.ReviewResponseDTO;
+import com.moview.model.dto.response.ReviewsResponseDTO;
 import com.moview.model.entity.Member;
 import com.moview.model.entity.Review;
 import com.moview.model.entity.ReviewPreference;
@@ -118,15 +119,16 @@ public class ReviewController {
 		return ResponseEntity.status(HttpStatus.OK).body("Change Preference");
 	}
 
-	@GetMapping("/reviews/{page}")
-	public ResponseEntity<List<ReviewsResponseDTO>> findAllReviews(@PathVariable(name = "page") int page) {
+	@GetMapping("/reviews")
+	public ResponseEntity<List<ReviewsResponseDTO>> findAllReviews(@RequestParam(name = "page") int page,
+		@RequestParam(name = "sortOption") String sortOption) {
 
-		List<ReviewsResponseDTO> reviewsResponseDTOS = reviewService.findAllWithLikeCount(page);
+		List<ReviewsResponseDTO> reviewsResponseDTOS = reviewService.findAllWithLikeCount(sortOption, page);
 		return ResponseEntity.status(HttpStatus.OK).body(reviewsResponseDTOS);
 	}
 
-	@GetMapping("/reviews")
-	public ResponseEntity<?> findAll(@ModelAttribute ReviewSearchRequestDTO reviewSearchRequestDTO){
+	@GetMapping("/reviews/search")
+	public ResponseEntity<?> findAll(@ModelAttribute ReviewSearchRequestDTO reviewSearchRequestDTO) {
 
 		log.info("reviewSearchRequestDTO : {}", reviewSearchRequestDTO);
 

@@ -13,6 +13,7 @@ public class ReviewSearchRequestDTO {
 
 	String searchOption;
 	String searchWord;
+	String sortOption;
 	int page;
 
 }

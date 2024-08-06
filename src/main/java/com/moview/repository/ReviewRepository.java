@@ -7,6 +7,8 @@ import java.util.UUID;
 import org.springframework.stereotype.Repository;
 
 import com.moview.model.constant.SearchOption;
+import com.moview.model.constant.SortOption;
+import com.moview.model.dto.request.ReviewSearchRequestDTO;
 import com.moview.model.dto.response.ReviewsResponseDTO;
 import com.moview.model.entity.Review;
 
@@ -40,25 +42,9 @@ public class ReviewRepository {
 		em.remove(review);
 	}
 
-	public List<ReviewsResponseDTO> findAllWithLikeCount(int pageNumber, int pageSize) {
+	public List<ReviewsResponseDTO> findAllWithLikeCount(String sortOption, int pageNumber, int pageSize) {
 
-		String query = """
-			select new com.moview.model.dto.response.ReviewsResponseDTO(
-			    r.id,
-			    m.email,
-			    m.nickname,
-			    r.title,
-			    r.content,
-			    coalesce(count(case when p.likeSign = true then 1 else null end), 0),
-			    r.createDate,
-			    r.updateDate
-			)
-			from Review r
-			left join Member m on r.member.email = m.email
-			left join ReviewPreference p on r.id = p.review.id
-			group by r.id, m.nickname, r.title, r.content, r.createDate, r.updateDate
-			order by coalesce(count(case when p.likeSign = true then 1 else null end), 0) desc, r.createDate desc
-			""";
+		String query = makeReviewsBaseQuery() + makeReviewsGroupByClause() + makeReviewsOrderByClause(sortOption);
 
 		return em.createQuery(query, ReviewsResponseDTO.class)
 			.setFirstResult((pageNumber + PAGE_CORRECT_FACTOR) * pageSize)
@@ -66,19 +52,20 @@ public class ReviewRepository {
 			.getResultList();
 	}
 
-	public List<ReviewsResponseDTO> findBySearchWordWithLikeCount(String searchOption, String searchWord, int pageNum,
+	public List<ReviewsResponseDTO> findBySearchWordWithLikeCount(ReviewSearchRequestDTO reviewSearchRequestDTO,
 		int pageSize) {
 
-		String query = makeBaseQuery() + makeWhereClause(searchOption) + makeGroupAndOrderByClause();
+		String query = makeReviewsBaseQuery() + makeSearchWhereClause(reviewSearchRequestDTO.getSearchOption())
+			+ makeReviewsGroupByClause() + makeReviewsOrderByClause(reviewSearchRequestDTO.getSortOption());
 
 		return em.createQuery(query, ReviewsResponseDTO.class)
-			.setParameter("searchWord", searchWord)
-			.setFirstResult((pageNum + PAGE_CORRECT_FACTOR) * pageSize)
+			.setParameter("searchWord", reviewSearchRequestDTO.getSearchWord())
+			.setFirstResult((reviewSearchRequestDTO.getPage() + PAGE_CORRECT_FACTOR) * pageSize)
 			.setMaxResults(pageSize)
 			.getResultList();
 	}
 
-	private String makeBaseQuery() {
+	private String makeReviewsBaseQuery() {
 		return """
 			select new com.moview.model.dto.response.ReviewsResponseDTO(
 			    r.id,
@@ -96,7 +83,7 @@ public class ReviewRepository {
 			""";
 	}
 
-	private String makeWhereClause(String searchOption) {
+	private String makeSearchWhereClause(String searchOption) {
 
 		return switch (SearchOption.valueOf(searchOption.toUpperCase())) {
 			case SearchOption.NICKNAME -> "where lower(m.nickname) like lower(concat('%', :searchWord, '%'))";
@@ -108,8 +95,17 @@ public class ReviewRepository {
 
 	}
 
-	private String makeGroupAndOrderByClause() {
-		return "group by r.id, m.email, m.nickname, r.title, r.content, r.createDate, r.updateDate order by likeSign desc, r.createDate desc";
+	private String makeReviewsGroupByClause() {
+		return "group by r.id, m.email, m.nickname, r.title, r.content, r.createDate, r.updateDate ";
+	}
+
+	private String makeReviewsOrderByClause(String sortOption) {
+
+		return switch (SortOption.valueOf(sortOption.toUpperCase())) {
+			case SortOption.LIKE -> "order by likeSign desc, r.createDate desc";
+			case SortOption.CREATE -> "order by r.createDate desc";
+		};
+
 	}
 
 }

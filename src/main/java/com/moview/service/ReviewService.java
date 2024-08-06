@@ -65,15 +65,12 @@ public class ReviewService {
 			.orElseThrow(() -> new IllegalArgumentException(ErrorMessage.REVIEW_NOT_EXIST));
 	}
 
-	public List<ReviewsResponseDTO> findAllWithLikeCount(int pageNumber) {
-		return reviewRepository.findAllWithLikeCount(pageNumber, PAGE_SIZE);
+	public List<ReviewsResponseDTO> findAllWithLikeCount(String sortOption, int pageNumber) {
+		return reviewRepository.findAllWithLikeCount(sortOption, pageNumber, PAGE_SIZE);
 	}
 
 	public List<ReviewsResponseDTO> search(ReviewSearchRequestDTO reviewSearchRequestDTO) {
-		return reviewRepository.findBySearchWordWithLikeCount(reviewSearchRequestDTO.getSearchOption(),
-			reviewSearchRequestDTO.getSearchWord(),
-			reviewSearchRequestDTO.getPage(),
-			PAGE_SIZE);
+		return reviewRepository.findBySearchWordWithLikeCount(reviewSearchRequestDTO, PAGE_SIZE);
 	}
 
 	public void delete(Review findReview) {

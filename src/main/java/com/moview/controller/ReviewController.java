@@ -106,7 +106,7 @@ public class ReviewController {
 		return ResponseEntity.status(HttpStatus.OK).body("delete complete");
 	}
 
-	@PutMapping("/review/{id}/like")
+	@PostMapping("/review/{id}/like")
 	public ResponseEntity<String> likeReview(@PathVariable(name = "id") UUID id, HttpSession httpSession) {
 
 		String email = (String)httpSession.getAttribute("email");

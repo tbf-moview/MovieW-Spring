@@ -14,6 +14,7 @@ import com.moview.model.entity.Member;
 import com.moview.model.vo.KakaoTokenVO;
 import com.moview.model.vo.KakaoUserVO;
 import com.moview.model.vo.MoviewTokenVO;
+// import com.moview.service.MemberRegisterService;
 import com.moview.service.MemberRegisterService;
 import com.moview.service.MemberService;
 import com.moview.service.oauth.KakaoConnection;
@@ -25,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/login")
+@RequestMapping("/api")
 public class LoginController {
 
 	private final MemberService memberService;
@@ -33,7 +34,7 @@ public class LoginController {
 	private final JwtTokenUtil jwtTokenUtil;
 	private final MemberRegisterService memberRegisterService;
 
-	@PostMapping("/kakao")
+	@PostMapping("/login/kakao")
 	public ResponseEntity<String> kakaoCallback(@RequestBody Map<String, Object> codeMap,
 		HttpServletResponse response) {
 
@@ -55,17 +56,35 @@ public class LoginController {
 		return ResponseEntity.ok("login successfully");
 	}
 
-	@GetMapping("/google")
-	public String googleCallback() {
-		return "redirect:/http://localhost:8080/oauth2callback";
+	// @GetMapping("/login/google")
+	// public String googleCallback() {
+	// 	return "redirect:/http://localhost:8080/oauth2callback";
+	// }
+
+	// @GetMapping("/login/naver")
+	// public String naverCallback() {
+	// 	return "as";
+	// }
+
+	// @PostMapping("/login/moview")
+	// 로그인
+
+	@PostMapping("/signup/moview")
+	public ResponseEntity<?> signin(@RequestBody Map<String, String> emailMap){
+		String email = emailMap.get("email");
+
+		String nickname = memberRegisterService.substringEmail(email);
+		Member member = new Member(email,nickname);
+		String jwtToken = jwtTokenUtil.generateAccessToken(email,nickname);
+		memberRegisterService.sendVerificationEmail(member,jwtToken);
+
+		return ResponseEntity.ok().body("success");
 	}
 
-	@GetMapping("/naver")
-	public String naverCallback() {
-		return "as";
-	}
+	// 이메일 전송
 
-	@GetMapping("/verify")
+	@GetMapping("/login/verify")
+	// 이메일에 있는 링크 클릭
 	public String verifyMember(@RequestParam("token") String token) {
 		String email = jwtTokenUtil.extractUserEmail(token);
 		String nickname = jwtTokenUtil.extractNickname(token);
@@ -75,5 +94,10 @@ public class LoginController {
 			return "Invalid token or token expired";
 		}
 	}
+
+
+	// 엑세스 토큰 검증 (헤더에 있는 토큰을 검증 -> success, fail)
+	// @GetMapping
+
 
 }

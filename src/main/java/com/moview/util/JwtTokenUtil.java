@@ -38,7 +38,7 @@ public class JwtTokenUtil {
 			.setSubject(email)
 			.setIssuedAt(new Date())
 			.setExpiration(new Date(System.currentTimeMillis() + 3600000))
-			.signWith(SignatureAlgorithm.HS512, secretKey)
+			.signWith(SignatureAlgorithm.HS256, secretKey)
 			.compact();
 	}
 

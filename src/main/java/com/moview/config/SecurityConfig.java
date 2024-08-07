@@ -18,6 +18,10 @@ public class SecurityConfig {
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		return http.authorizeHttpRequests((auth) -> auth
 				.anyRequest().permitAll())
+
+			.oauth2Login(oauth2 -> oauth2
+				.defaultSuccessUrl("/", true)  // 성공 후 리디렉션할 URL
+			)
 			.cors((cors) -> cors.configurationSource(corsConfigurationSource))
 			.csrf(AbstractHttpConfigurer::disable)
 			.build();

@@ -23,4 +23,8 @@ public class Member {
 
 	@Column(length = 100)
 	private String nickname;
+
+	public Member(String email){
+		this.email = email;
+	}
 }

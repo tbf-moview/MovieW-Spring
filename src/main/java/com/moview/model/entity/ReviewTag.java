@@ -1,5 +1,7 @@
 package com.moview.model.entity;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.Column;
@@ -20,11 +22,11 @@ import lombok.NoArgsConstructor;
 public class ReviewTag {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private long id;
 
 	@ManyToOne
-	@JoinColumn(name = "review_id")
+	@JoinColumn(name = "review_id", nullable = false)
 	@JsonBackReference
 	private Review review;
 
@@ -40,8 +42,33 @@ public class ReviewTag {
 		return new ReviewTag(review, tag);
 	}
 
+	void dissociateReview() {
+		this.review = null;
+	}
+
 	@Override
 	public String toString() {
 		return "ReviewTag (id=" + id + ", tag=" + tag + ")";
+	}
+
+	@Override
+	public boolean equals(Object o) {
+
+		if (this == o) {
+			return true;
+		}
+
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+
+		ReviewTag that = (ReviewTag)o;
+		return Objects.equals(review, that.review)
+			&& Objects.equals(tag, that.tag);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(review, tag);
 	}
 }

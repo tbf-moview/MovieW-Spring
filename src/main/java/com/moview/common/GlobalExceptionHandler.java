@@ -10,6 +10,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.amazonaws.AmazonClientException;
+
 import lombok.extern.slf4j.Slf4j;
 
 @RestControllerAdvice
@@ -19,12 +21,21 @@ public class GlobalExceptionHandler {
 	private static final String ERROR_MESSAGE_KEY = "message";
 
 	@ExceptionHandler({IllegalStateException.class, IllegalArgumentException.class})
-	public ResponseEntity<Map<String, String>> handleRuntimeExceptions(
+	public ResponseEntity<Map<String, String>> handleIllegalExceptions(
 		RuntimeException runtimeException) {
 
 		logError(runtimeException);
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 			.body(Map.of(ERROR_MESSAGE_KEY, runtimeException.getMessage()));
+	}
+
+	@ExceptionHandler(AmazonClientException.class)
+	public ResponseEntity<Map<String, String>> handleAmazonException(AmazonClientException amazonClientException) {
+
+		logError(amazonClientException);
+		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+			.body(Map.of(ERROR_MESSAGE_KEY, amazonClientException.getMessage()));
+
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)

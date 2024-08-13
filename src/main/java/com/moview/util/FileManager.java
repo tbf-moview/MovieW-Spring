@@ -3,6 +3,8 @@ package com.moview.util;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -17,6 +19,10 @@ public class FileManager {
 
 	private static final String FILE_NAME_DELIMITER = "_";
 	private static final String SPACE = "\\s";
+
+	private static final String START_IMAGE_TAG = "<img src=\"";
+	private static final String END_IMAGE_TAG = "\">";
+	private static final String HOST_NAME = "https://tbf-moview-test.s3.ap-northeast-2.amazonaws.com/";
 
 	public static File convertFile(MultipartFile originalFile, String prefixName) throws IOException {
 		String originalFilename = originalFile.getOriginalFilename();
@@ -51,6 +57,35 @@ public class FileManager {
 		} else {
 			log.info("{} 삭제실패", file.getName());
 		}
+	}
+
+	public static List<String> extractImageFileNameInContent(List<String> texts) {
+
+		String text = combineText(texts);
+		List<String> fileNames = new ArrayList<>();
+
+		while (text.contains(START_IMAGE_TAG)) {
+
+			text = text.substring(text.indexOf(START_IMAGE_TAG) + START_IMAGE_TAG.length());
+
+			String fileName = text.substring(HOST_NAME.length(), text.indexOf(END_IMAGE_TAG));
+			fileNames.add(fileName);
+		}
+
+		System.out.println(fileNames);
+
+		return fileNames;
+	}
+
+	private static String combineText(List<String> texts) {
+
+		StringBuilder stringBuilder = new StringBuilder();
+
+		for (String text : texts) {
+			stringBuilder.append(text);
+		}
+
+		return stringBuilder.toString();
 	}
 
 }

@@ -17,7 +17,8 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		return http.authorizeHttpRequests((auth) -> auth
-				.anyRequest().permitAll())
+				.requestMatchers("").permitAll()
+				.anyRequest())
 
 			.oauth2Login(oauth2 -> oauth2
 				.defaultSuccessUrl("/", true)  // 성공 후 리디렉션할 URL

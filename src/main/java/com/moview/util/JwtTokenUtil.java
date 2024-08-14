@@ -112,8 +112,12 @@ public class JwtTokenUtil {
 
 	public boolean validateToken(String token) {
 		try {
-			Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
-			return true;
+			String jwtToken = String.valueOf(Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token));
+			if(isTokenExpired(jwtToken)){
+				return true;
+			}else {
+				return false;
+			}
 		} catch (Exception e) {
 			return false;
 		}

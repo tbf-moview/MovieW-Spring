@@ -56,19 +56,6 @@ public class LoginController {
 		return ResponseEntity.ok("login successfully");
 	}
 
-	// @GetMapping("/login/google")
-	// public String googleCallback() {
-	// 	return "redirect:/http://localhost:8080/oauth2callback";
-	// }
-
-	// @GetMapping("/login/naver")
-	// public String naverCallback() {
-	// 	return "as";
-	// }
-
-	// @PostMapping("/login/moview")
-	// 로그인
-
 	@PostMapping("/signup/moview")
 	public ResponseEntity<?> signin(@RequestBody Map<String, String> emailMap){
 		String email = emailMap.get("email");
@@ -94,10 +81,5 @@ public class LoginController {
 			return "Invalid token or token expired";
 		}
 	}
-
-
-	// 엑세스 토큰 검증 (헤더에 있는 토큰을 검증 -> success, fail)
-	// @GetMapping
-
 
 }

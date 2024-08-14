@@ -11,16 +11,28 @@ import org.springframework.web.bind.annotation.RestController;
 import com.moview.util.JwtTokenUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 
 @RestController
+@RequiredArgsConstructor
 public class CookieController {
-	@Autowired
-	JwtTokenUtil jwtTokenUtil;
+
+	private final JwtTokenUtil jwtTokenUtil;
 
 	@GetMapping("/api/token/test")
 	public String readCookie(HttpServletRequest request) {
 		String cookieValue = getCookieValue(request, "jwtToken");
 		System.out.println(jwtTokenUtil.decodeJwt(cookieValue));
 		return "/index.html";
+	}
+
+	@GetMapping("/api/token/auth")
+	public String checkCookie(HttpServletRequest request) {
+		String cookieValue = getCookieValue(request, "jwtToken");
+		if (cookieValue == null || !jwtTokenUtil.validateToken(cookieValue)) {
+			return "not authorized";
+		}
+
+		return "authorized";
 	}
 }

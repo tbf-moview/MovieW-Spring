@@ -18,8 +18,7 @@ public class TokenController {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication instanceof CustomOAuth2User) {
-            CustomOAuth2User user = (CustomOAuth2User) authentication.getPrincipal();
+        if (authentication.getPrincipal() instanceof CustomOAuth2User user) {
             String email = user.getName();
             String nickname = user.getNickname();
 

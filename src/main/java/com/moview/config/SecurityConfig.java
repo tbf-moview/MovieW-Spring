@@ -29,7 +29,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.authorizeHttpRequests((auth) -> auth
-                        .requestMatchers(HttpMethod.GET, "/api/review/**", "/api/reviews/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/review/**", "/api/reviews/*", "/api/token").permitAll()
+                        .requestMatchers("/api/login/**").permitAll()
                         .requestMatchers("/api/review/**").authenticated()
                         .anyRequest().permitAll())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))

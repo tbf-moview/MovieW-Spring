@@ -47,7 +47,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         if (member.isEmpty()) {
             memberRepository.save(new Member(
                     userVO.email(),
-                    userVO.username()
+                    userVO.nickname()
             ));
         }
 

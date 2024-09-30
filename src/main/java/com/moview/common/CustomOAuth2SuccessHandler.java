@@ -1,6 +1,5 @@
-package com.moview.common.oauth2;
+package com.moview.common;
 
-import com.moview.common.JwtTokenProvider;
 import com.moview.model.dto.response.CustomOAuth2User;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,7 +14,7 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
-public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
+public class CustomOAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     @Value("${moview.client.url}")
     private String clientUrl;
@@ -31,9 +30,9 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         CustomOAuth2User customUserDetails = (CustomOAuth2User) authentication.getPrincipal();
 
         String email = customUserDetails.getName();
-        String username = customUserDetails.getUsername();
+        String nickname = customUserDetails.getNickname();
 
-        String token = jwtTokenProvider.generateAccessToken(email, username);
+        String token = jwtTokenProvider.generateAccessToken(email, nickname);
 
         response.addCookie(createCookie("Authorization", token));
         response.sendRedirect(clientUrl);

@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -42,13 +43,12 @@ public class ReviewController {
 	private final ReviewPreferenceService reviewPreferenceService;
 
 	@PostMapping("/review")
-	public ResponseEntity<String> createReview(@Validated @ModelAttribute ReviewRequestDTO reviewRequestDTO,
-		HttpSession httpSession) {
+	public ResponseEntity<String> createReview(@Validated @ModelAttribute ReviewRequestDTO reviewRequestDTO) {
 
 		log.info("reviewRequestDTO : {}", reviewRequestDTO);
 
-		String email = (String)httpSession.getAttribute("email");
-		Member member = memberService.findByEmail("ee@test.com");
+		String email = SecurityContextHolder.getContext().getAuthentication().getName();
+		Member member = memberService.findByEmail(email);
 
 		Review saveReview = reviewService.save(member, reviewRequestDTO);
 		log.info("saveReview : {}", saveReview);
@@ -65,8 +65,8 @@ public class ReviewController {
 		long likeCount = reviewPreferenceService.countPreference(review);
 		log.info("likeCount : {}", likeCount);
 
-		String email = (String)httpSession.getAttribute("email");
-		Member member = memberService.findByEmail("ee@test.com");
+		String email = SecurityContextHolder.getContext().getAuthentication().getName();
+		Member member = memberService.findByEmail(email);
 
 		ReviewPreference reviewPreference = reviewPreferenceService.findByMemberAndReview(member, review);
 
@@ -87,7 +87,8 @@ public class ReviewController {
 	public ResponseEntity<String> updateReview(@PathVariable(name = "id") UUID id,
 		@Validated @ModelAttribute ReviewRequestDTO reviewRequestDTO) {
 
-		Member member = memberService.findByEmail("ee@test.com");
+		String email = SecurityContextHolder.getContext().getAuthentication().getName();
+		Member member = memberService.findByEmail(email);
 
 		Review updateReview = reviewService.update(id, member, reviewRequestDTO);
 		log.info("updateReview : {}", updateReview);
@@ -109,8 +110,8 @@ public class ReviewController {
 	@PostMapping("/review/{id}/like")
 	public ResponseEntity<String> likeReview(@PathVariable(name = "id") UUID id, HttpSession httpSession) {
 
-		String email = (String)httpSession.getAttribute("email");
-		Member member = memberService.findByEmail("dd@test.com");
+		String email = SecurityContextHolder.getContext().getAuthentication().getName();
+		Member member = memberService.findByEmail(email);
 		Review review = reviewService.findByIdWithImagesAndTags(id);
 
 		ReviewPreference reviewPreference = reviewPreferenceService.changePreference(member, review);

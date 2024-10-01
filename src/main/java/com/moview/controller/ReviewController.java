@@ -107,8 +107,8 @@ public class ReviewController {
 
         Review findReview = reviewService.findByIdWithImagesAndTags(id);
 
-        reviewService.delete(findReview);
         reviewPreferenceService.deleteAll(findReview);
+        reviewService.delete(findReview);
 
         return ResponseEntity.status(HttpStatus.OK).body("delete complete");
     }
